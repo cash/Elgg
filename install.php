@@ -4,35 +4,43 @@
  *
  * @package Elgg
  * @subpackage Core
- * @author Curverider Ltd
  * @link http://elgg.org/
  */
 
-/**
- * Start the Elgg engine
- */
-require_once(dirname(__FILE__) . "/engine/start.php");
 global $CONFIG;
+if (!isset($CONFIG)) {
+	$CONFIG = new stdClass;
+}
+
+$lib_dir = dirname(__FILE__) . '/engine/lib/';
+
+// bootstrapping with required files in a required order
+$required_files = array(
+	'exceptions.php', 'elgglib.php', 'views.php', 'access.php', 'system_log.php', 'export.php',
+	'sessions.php', 'languages.php', 'input.php', 'install.php', 'cache.php', 'output.php'
+);
+
+foreach ($required_files as $file) {
+	$path = $lib_dir . $file;
+	if (!include($path)) {
+		echo "Could not load file '$path'. "
+		. 'Please check your Elgg installation for all required files.';
+		exit;
+	}
+}
 
 elgg_set_viewtype('failsafe');
-/**
- * If we're installed, go back to the homepage
- */
-if ((is_installed() && is_db_installed() && datalist_get('installed'))) {
-	forward("index.php");
-}
 
-/**
- * Install the database
- */
-if (!is_db_installed()) {
-	validate_platform();
-	run_sql_script(dirname(__FILE__) . "/engine/schema/mysql.sql");
-	init_site_secret();
-	system_message(elgg_echo("installation:success"));
-}
+// If we're already installed, go back to the homepage
+// @todo
 
-/**
- * Load the front page
- */
-page_draw(elgg_echo("installation:settings"), elgg_view_layout("one_column", elgg_view("settings/install")));
+require_once(dirname(__FILE__) . "/install/ElggInstaller.php");
+
+$installer = new ElggInstaller();
+
+$step = get_input('step', 'welcome');
+if (in_array($step, $installer->getSteps())) {
+	$installer->$step();
+} else {
+	// throw exception
+}
