@@ -12,6 +12,7 @@ if (!isset($CONFIG)) {
 	$CONFIG = new stdClass;
 }
 
+// @todo move this into installer class since what libraries are included depends on the step
 $lib_dir = dirname(__FILE__) . '/engine/lib/';
 
 // bootstrapping with required files in a required order

@@ -20,7 +20,10 @@ class ElggInstaller {
 		'complete',
 		);
 
+	protected $isAction;
+
 	public function __construct() {
+		$this->isAction = $_SERVER['REQUEST_METHOD'] === 'POST';
 	}
 
 	public function getSteps() {
@@ -45,8 +48,7 @@ class ElggInstaller {
 	}
 
 	function database() {
-		// somehow determine whether this is an action or page request
-		if ($action) {
+		if ($this->isAction) {
 			// create database and tables
 
 			$this->continueToNextStep('database');
@@ -56,7 +58,7 @@ class ElggInstaller {
 	}
 
 	function settings() {
-		if ($action) {
+		if ($this->isAction) {
 			// save system settings
 
 			$this->continueToNextStep('settings');
@@ -66,7 +68,7 @@ class ElggInstaller {
 	}
 
 	function admin() {
-		if ($action) {
+		if ($this->isAction) {
 			// create admin account
 
 			$this->continueToNextStep('admin');
@@ -80,14 +82,34 @@ class ElggInstaller {
 	}
 
 	protected function render($step, $vars = array()) {
+		
+		$vars['next_step'] = $this->getNextStep($step);
 		$title = elgg_echo("install:$step");
-		$body = elgg_view("install/$step", $vars);
-		page_draw($title, $body, 'page_shells/default', array('step' => $step));
+		$body = elgg_view("install/pages/$step", $vars);
+		page_draw(
+				$title,
+				$body,
+				'page_shells/install',
+				array(
+					'step' => $step,
+					'steps' => $this->getSteps(),
+					)
+				);
 		exit;
 	}
 
 	protected function continueToNextStep($currentStep) {
+		$this->isAction = FALSE;
+		//$nextStep = $this->getNextStep($currentStep);
+		forward($this->getNextStepUrl($currentStep));
+	}
+
+	protected function getNextStep($currentStep) {
+		return $this->steps[1 + array_search($currentStep, $this->steps)];
+	}
+
+	protected function getNextStepUrl($currentStep) {
 		$nextStep = $this->steps[1 + array_search($currentStep, $this->steps)];
-		$this->$nextStep();
+		return "/install.php?step=$nextStep";
 	}
 }
