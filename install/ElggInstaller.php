@@ -87,7 +87,11 @@ class ElggInstaller {
 	}
 
 	protected function validateDatabaseVars() {
-		return $this->getPostVariables();
+		$params = $this->getPostVariables();
+		
+		// attempt to connect to database
+
+		return $params;
 	}
 
 	protected function createSettingsFile($params) {
@@ -107,6 +111,14 @@ class ElggInstaller {
 		$result = file_put_contents($settingsFilename, $template);
 		if (!$result) {
 			// throw exception
+		}
+	}
+
+	protected function bootstrapDatabaseSettings() {
+		global $CONFIG;
+
+		if (!include_once("{$CONFIG->path}engine/settings.php")) {
+			throw new InstallationException("Elgg could not load the settings file.");
 		}
 	}
 

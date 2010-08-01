@@ -24,74 +24,22 @@ if (!isset($CONFIG)) {
  */
 
 // Database username
-$CONFIG->dbuser = '{{CONFIG_DBUSER}}';
+$CONFIG->dbuser = '{{user}}';
 
 // Database password
-$CONFIG->dbpass = '{{CONFIG_DBPASS}}';
+$CONFIG->dbpass = '{{password}}';
 
 // Database name
-$CONFIG->dbname = '{{CONFIG_DBNAME}}';
+$CONFIG->dbname = '{{dbname}}';
 
 // Database server
 // (For most configurations, you can leave this as 'localhost')
-$CONFIG->dbhost = '{{CONFIG_DBHOST}}';
+$CONFIG->dbhost = '{{host}}';
 
 // Database table prefix
 // If you're sharing a database with other applications, you will want to use this
 // to differentiate Elgg's tables.
-$CONFIG->dbprefix = '{{CONFIG_DBPREFIX}}';
-
-/*
- * Multiple database connections
- *
- * Here you can set up multiple connections for reads and writes. To do this, uncomment out
- * the lines below.
- */
-
-/*
-
-// Yes! We want to split reads and writes
-$CONFIG->db->split = true;
-
-// READS
-// Database username
-$CONFIG->db['read']->dbuser = "";
-
-// Database password
-$CONFIG->db['read']->dbpass = "";
-
-// Database name
-$CONFIG->db['read']->dbname = "";
-
-// Database server
-// (For most configurations, you can leave this as 'localhost')
-$CONFIG->db['read']->dbhost = "localhost";
-
-// WRITES
-// Database username
-$CONFIG->db['write']->dbuser = "";
-
-// Database password
-$CONFIG->db['write']->dbpass = "";
-
-// Database name
-$CONFIG->db['write']->dbname = "";
-
-// Database server
-// (For most configurations, you can leave this as 'localhost')
-$CONFIG->db['write']->dbhost = "localhost";
-
- */
-
-/*
- * For extra connections for both reads and writes, you can turn both
- * $CONFIG->db['read'] and $CONFIG->db['write'] into an array, eg:
- *
- * 	$CONFIG->db['read'][0]->dbhost = "localhost";
- *
- * Note that the array keys must be numeric and consecutive, i.e., they start
- * at 0, the next one must be at 1, etc.
- */
+$CONFIG->dbprefix = '{{prefix}}';
 
 
 /**
@@ -111,16 +59,10 @@ $CONFIG->db['write']->dbhost = "localhost";
 //	array('server2', 11211)
 //);
 
+
 /**
  * Some work-around flags.
  */
 
 // Try uncommenting the below if your notification emails are not being sent
 // $CONFIG->broken_mta = true;
-
-/**
- * Url - I am not sure if this will be here ?
- **/
-
-// URL
-$CONFIG->url = "";
