@@ -124,25 +124,17 @@ input[type="submit"]:hover {
 	border: 4px solid #0054a7;
 }
 
-#startpage_wrapper hr {
-	border:0;
-	border-bottom:1px solid #333333;
-}
-#startpage_wrapper td {
-	text-align: left;
-	vertical-align: middle;
+#elgg_system_message {
+	padding: 3px 10px 3px 10px;
+	margin-bottom: 20px;
 }
 
-.messages {
-	border:1px solid #00cc00;
-	background:#ccffcc;
-	color:#000000;
-	padding:3px 10px 3px 10px;
+.success {
+	border: 1px solid #00cc00;
+	background: #ccffcc;
 }
-.messages_error {
-	border:1px solid #D3322A;
-	background:#F7DAD8;
-	color:#000000;
-	padding:3px 10px 3px 10px;
 
+.error {
+	border: 1px solid #D3322A;
+	background: #F7DAD8;
 }

@@ -33,6 +33,9 @@ class ElggInstaller {
 
 		set_error_handler('__elgg_php_error_handler');
 		set_exception_handler('__elgg_php_exception_handler');
+
+		session_name('Elgg');
+		session_start();
 	}
 
 	public function run($step) {
@@ -47,7 +50,7 @@ class ElggInstaller {
 	protected function render($step, $vars = array()) {
 
 		$vars['next_step'] = $this->getNextStep($step);
-		
+
 		$title = elgg_echo("install:$step");
 		$body = elgg_view("install/pages/$step", $vars);
 		page_draw(
@@ -83,31 +86,57 @@ class ElggInstaller {
 		$this->render('requirements', $params);
 	}
 
-	protected function database($vars) {
-		if ($this->isAction) {
-			$params = $this->validateDatabaseVars();
+	protected function database($submissionVars) {
 
-			$this->createSettingsFile($params);
-
-			$this->bootstrapDatabaseSettings();
-
-			$this->loadLibrary('database');
-
-			$this->installDatabase($params);
-
-			$this->continueToNextStep('database');
-		}
-
-		$variables = array(
-			'user'     => array('type' => 'text', 'value' => '', ),
-			'password' => array('type' => 'password', 'value' => ''),
-			'dbname'   => array('type' => 'text', 'value' => ''),
-			'host'     => array('type' => 'text', 'value' => 'localhost'),
-			'prefix'   => array('type' => 'text', 'value' => 'elgg_'),
+		$formVars = array(
+			'user' => array(
+				'type' => 'text',
+				'value' => '',
+				'required' => TRUE,
+				),
+			'password' => array(
+				'type' => 'password',
+				'value' => '',
+				'required' => TRUE,
+				),
+			'dbname' => array(
+				'type' => 'text',
+				'value' => '',
+				'required' => TRUE,
+				),
+			'host' => array(
+				'type' => 'text',
+				'value' => 'localhost',
+				'required' => TRUE,
+				),
+			'prefix' => array(
+				'type' => 'text',
+				'value' => 'elgg_',
+				'required' => TRUE,
+				),
 		);
 
+		if ($this->isAction) {
+			do {
+				if (!$this->validateDatabaseVars($submissionVars, $formVars)) {
+					// error so we break out of action and serve same page
+					break;
+				}
+
+				//$this->createSettingsFile($params);
+
+				//$this->bootstrapDatabaseSettings();
+
+				//$this->loadLibrary('database');
+
+				//$this->installDatabase($params);
+
+				$this->continueToNextStep('database');
+			} while(FALSE);
+		}
+
 		$params = array(
-			'variables' => $variables,
+			'variables' => $formVars,
 		);
 
 		$this->render('database', $params);
@@ -255,8 +284,15 @@ class ElggInstaller {
 	/**
 	 * Database support methods
 	 */
-	protected function validateDatabaseVars() {
-		$params = $this->getPostVariables();
+	protected function validateDatabaseVars($submissionVars, $formVars) {
+
+		foreach ($formVars as $field => $info) {
+			if ($info['required'] == TRUE && !$submissionVars[$field]) {
+				$name = elgg_echo("install:$field");
+				register_error("$name is required");
+				return FALSE;
+			}
+		}
 		
 		// attempt to connect to database
 
