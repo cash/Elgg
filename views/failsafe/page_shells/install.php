@@ -21,6 +21,7 @@ header('Content-type: text/html; charset=utf-8');
 // turn off browser caching
 header('Pragma: public', TRUE);
 header("Cache-Control: no-cache, must-revalidate", TRUE);
+header('Expires: Fri, 05 Feb 1982 00:00:00 -0500', TRUE);
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">

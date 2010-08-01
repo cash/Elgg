@@ -36,7 +36,7 @@ $english = array(
 /**
  * Errors
  */
-	'exception:title' => "Welcome to Elgg.",
+	'exception:title' => "Elgg Error",
 
 	'InstallationException:CantCreateSite' => "Unable to create a default ElggSite with credentials Name:%s, Url: %s",
 

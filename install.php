@@ -18,5 +18,5 @@ $step = get_input('step', 'welcome');
 if (in_array($step, $installer->getSteps())) {
 	$installer->$step();
 } else {
-	// throw exception
+	throw new InstallationException("$step is an unknown installation step.");
 }

@@ -30,6 +30,9 @@ class ElggInstaller {
 		$this->bootstrapEngine();
 
 		elgg_set_viewtype('failsafe');
+
+		set_error_handler('__elgg_php_error_handler');
+		set_exception_handler('__elgg_php_exception_handler');
 	}
 
 	public function getSteps() {
