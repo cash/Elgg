@@ -35,15 +35,42 @@ class ElggInstaller {
 		set_exception_handler('__elgg_php_exception_handler');
 	}
 
-	public function getSteps() {
-		return $this->steps;
+	public function run($step) {
+		$params = $this->getPostVariables();
+		if (in_array($step, $this->getSteps())) {
+			$this->$step($params);
+		} else {
+			throw new InstallationException("$step is an unknown installation step.");
+		}
 	}
 
-	public function welcome() {
+	protected function render($step, $vars = array()) {
+
+		$vars['next_step'] = $this->getNextStep($step);
+		
+		$title = elgg_echo("install:$step");
+		$body = elgg_view("install/pages/$step", $vars);
+		page_draw(
+				$title,
+				$body,
+				'page_shells/install',
+				array(
+					'step' => $step,
+					'steps' => $this->getSteps(),
+					)
+				);
+		exit;
+	}
+
+	/**
+	 * Step controllers
+	 */
+
+	protected function welcome($vars) {
 		$this->render('welcome');
 	}
 
-	public function requirements() {
+	protected function requirements($vars) {
 
 		// attempt to create .htaccess file
 
@@ -56,7 +83,7 @@ class ElggInstaller {
 		$this->render('requirements', $params);
 	}
 
-	public function database() {
+	protected function database($vars) {
 		if ($this->isAction) {
 			$params = $this->validateDatabaseVars();
 
@@ -86,49 +113,7 @@ class ElggInstaller {
 		$this->render('database', $params);
 	}
 
-	protected function validateDatabaseVars() {
-		$params = $this->getPostVariables();
-		
-		// attempt to connect to database
-
-		return $params;
-	}
-
-	protected function createSettingsFile($params) {
-		global $CONFIG;
-
-		$templateFile = "{$CONFIG->path}engine/settings.example.php";
-		$template = file_get_contents($templateFile);
-		if (!$template) {
-			// throw exception
-		}
-
-		foreach ($params as $k => $v) {
-			$template = str_replace("{{".$k."}}", $v, $template);
-		}
-
-		$settingsFilename = "{$CONFIG->path}engine/settings.php";
-		$result = file_put_contents($settingsFilename, $template);
-		if (!$result) {
-			// throw exception
-		}
-	}
-
-	protected function bootstrapDatabaseSettings() {
-		global $CONFIG;
-
-		if (!include_once("{$CONFIG->path}engine/settings.php")) {
-			throw new InstallationException("Elgg could not load the settings file.");
-		}
-	}
-
-	protected function installDatabase($params) {
-		global $CONFIG;
-		
-		run_sql_script("{$CONFIG->path}engine/schema/mysql.sql");
-	}
-
-	public function settings() {
+	protected function settings($vars) {
 		if ($this->isAction) {
 			// save system settings
 
@@ -146,7 +131,7 @@ class ElggInstaller {
 			//'language' => array('type' => 'pulldown', 'value' => 'en', 'options_values' => $languages),
 			//'siteaccess' => array('type' => 'access', 'value' =>  ACCESS_PUBLIC,),
 		);
-		
+
 		$params = array(
 			'variables' => $variables,
 		);
@@ -154,7 +139,7 @@ class ElggInstaller {
 		$this->render('settings', $params);
 	}
 
-	public function admin() {
+	protected function admin($vars) {
 		if ($this->isAction) {
 			// create admin account
 
@@ -175,27 +160,37 @@ class ElggInstaller {
 		$this->render('admin', $params);
 	}
 
-	public function complete() {
+	protected function complete($vars) {
 		$this->render('complete');
 	}
 
-	protected function render($step, $vars = array()) {
-		
-		$vars['next_step'] = $this->getNextStep($step);
-		$title = elgg_echo("install:$step");
-		$body = elgg_view("install/pages/$step", $vars);
-		page_draw(
-				$title,
-				$body,
-				'page_shells/install',
-				array(
-					'step' => $step,
-					'steps' => $this->getSteps(),
-					)
-				);
-		exit;
+	/**
+	 * Step management
+	 */
+
+	protected function getSteps() {
+		return $this->steps;
 	}
 
+	protected function continueToNextStep($currentStep) {
+		$this->isAction = FALSE;
+		forward($this->getNextStepUrl($currentStep));
+	}
+
+	protected function getNextStep($currentStep) {
+		return $this->steps[1 + array_search($currentStep, $this->steps)];
+	}
+
+	protected function getNextStepUrl($currentStep) {
+		global $CONFIG;
+		$nextStep = $this->getNextStep($currentStep);
+		return "{$CONFIG->wwwroot}install.php?step=$nextStep";
+	}
+
+	/**
+	 * Bootstraping
+	 */
+	
 	protected function bootstrapEngine() {
 		global $CONFIG;
 
@@ -245,6 +240,10 @@ class ElggInstaller {
 		return $url;
 	}
 
+	/**
+	 * Action handling methods
+	 */
+	
 	protected function getPostVariables() {
 		$vars = array();
 		foreach ($_POST as $k => $v) {
@@ -253,18 +252,49 @@ class ElggInstaller {
 		return $vars;
 	}
 
-	protected function continueToNextStep($currentStep) {
-		$this->isAction = FALSE;
-		forward($this->getNextStepUrl($currentStep));
+	/**
+	 * Database support methods
+	 */
+	protected function validateDatabaseVars() {
+		$params = $this->getPostVariables();
+		
+		// attempt to connect to database
+
+		return $params;
 	}
 
-	protected function getNextStep($currentStep) {
-		return $this->steps[1 + array_search($currentStep, $this->steps)];
-	}
-
-	protected function getNextStepUrl($currentStep) {
+	protected function createSettingsFile($params) {
 		global $CONFIG;
-		$nextStep = $this->getNextStep($currentStep);
-		return "{$CONFIG->wwwroot}install.php?step=$nextStep";
+
+		$templateFile = "{$CONFIG->path}engine/settings.example.php";
+		$template = file_get_contents($templateFile);
+		if (!$template) {
+			// throw exception
+		}
+
+		foreach ($params as $k => $v) {
+			$template = str_replace("{{".$k."}}", $v, $template);
+		}
+
+		$settingsFilename = "{$CONFIG->path}engine/settings.php";
+		$result = file_put_contents($settingsFilename, $template);
+		if (!$result) {
+			// throw exception
+		}
 	}
+
+	protected function bootstrapDatabaseSettings() {
+		global $CONFIG;
+
+		if (!include_once("{$CONFIG->path}engine/settings.php")) {
+			throw new InstallationException("Elgg could not load the settings file.");
+		}
+	}
+
+	protected function installDatabase($params) {
+		global $CONFIG;
+		
+		run_sql_script("{$CONFIG->path}engine/schema/mysql.sql");
+	}
+
 }
