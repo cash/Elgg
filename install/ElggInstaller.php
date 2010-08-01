@@ -89,12 +89,12 @@ class ElggInstaller {
 	protected function database($submissionVars) {
 
 		$formVars = array(
-			'user' => array(
+			'dbuser' => array(
 				'type' => 'text',
 				'value' => '',
 				'required' => TRUE,
 				),
-			'password' => array(
+			'dbpassword' => array(
 				'type' => 'password',
 				'value' => '',
 				'required' => TRUE,
@@ -104,12 +104,12 @@ class ElggInstaller {
 				'value' => '',
 				'required' => TRUE,
 				),
-			'host' => array(
+			'dbhost' => array(
 				'type' => 'text',
 				'value' => 'localhost',
 				'required' => TRUE,
 				),
-			'prefix' => array(
+			'dbprefix' => array(
 				'type' => 'text',
 				'value' => 'elgg_',
 				'required' => TRUE,
@@ -135,11 +135,9 @@ class ElggInstaller {
 			} while(FALSE);
 		}
 
-		$params = array(
-			'variables' => $formVars,
-		);
+		$formVars = $this->makeFormSticky($formVars, $submissionVars);
 
-		$this->render('database', $params);
+		$this->render('database', array('variables' => $formVars));
 	}
 
 	protected function settings($vars) {
@@ -281,6 +279,13 @@ class ElggInstaller {
 		return $vars;
 	}
 
+	protected function makeFormSticky($formVars, $submissionVars) {
+		foreach ($submissionVars as $field => $value) {
+			$formVars[$field]['value'] = $value;
+		}
+		return $formVars;
+	}
+
 	/**
 	 * Database support methods
 	 */
@@ -294,9 +299,39 @@ class ElggInstaller {
 			}
 		}
 		
-		// attempt to connect to database
+		return $this->checkDatabaseSettings(
+					$submissionVars['dbuser'],
+					$submissionVars['dbpassword'],
+					$submissionVars['dbname'],
+					$submissionVars['dbhost']
+				);
+	}
 
-		return $params;
+	/**
+	 * Confirm the settings for the database
+	 *
+	 * @param string $user
+	 * @param string $password
+	 * @param string $dbname
+	 * @param string $host
+	 * @return bool
+	 */
+	function checkDatabaseSettings($user, $password, $dbname, $host) {
+		$mysql_dblink = mysql_connect($host, $user, $password, true);
+		if ($mysql_dblink == FALSE) {
+			register_error('Unable to connect to the database with these settings.');
+			return $FALSE;
+		}
+
+		$result = mysql_select_db($dbname, $mysql_dblink);
+
+		mysql_close($mysql_dblink);
+
+		if (!$result) {
+			register_error("Unable to use database $dbname");
+		}
+
+		return $result;
 	}
 
 	protected function createSettingsFile($params) {
@@ -305,7 +340,8 @@ class ElggInstaller {
 		$templateFile = "{$CONFIG->path}engine/settings.example.php";
 		$template = file_get_contents($templateFile);
 		if (!$template) {
-			// throw exception
+			register_error('Unable to read engine/settings.example.php');
+			return FALSE;
 		}
 
 		foreach ($params as $k => $v) {
@@ -315,8 +351,11 @@ class ElggInstaller {
 		$settingsFilename = "{$CONFIG->path}engine/settings.php";
 		$result = file_put_contents($settingsFilename, $template);
 		if (!$result) {
-			// throw exception
+			register_error('Unable to write engine/settings.php');
+			return FALSE;
 		}
+
+		return TRUE;
 	}
 
 	protected function bootstrapDatabaseSettings() {
