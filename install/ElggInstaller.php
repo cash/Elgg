@@ -55,7 +55,15 @@ class ElggInstaller {
 
 	public function database() {
 		if ($this->isAction) {
-			// create database and tables
+			$params = $this->validateDatabaseVars();
+
+			$this->createSettingsFile($params);
+
+			$this->bootstrapDatabaseSettings();
+
+			$this->loadLibrary('database');
+
+			$this->installDatabase($params);
 
 			$this->continueToNextStep('database');
 		}
@@ -67,6 +75,36 @@ class ElggInstaller {
 		);
 
 		$this->render('database', $params);
+	}
+
+	protected function validateDatabaseVars() {
+		return $this->getPostVariables();
+	}
+
+	protected function createSettingsFile($params) {
+		global $CONFIG;
+
+		$templateFile = "{$CONFIG->path}engine/settings.example.php";
+		$template = file_get_contents($templateFile);
+		if (!$template) {
+			// throw exception
+		}
+
+		foreach ($params as $k => $v) {
+			$template = str_replace("{{".$k."}}", $v, $template);
+		}
+
+		$settingsFilename = "{$CONFIG->path}engine/settings.php";
+		$result = file_put_contents($settingsFilename, $template);
+		if (!$result) {
+			// throw exception
+		}
+	}
+
+	protected function installDatabase($params) {
+		global $CONFIG;
+		
+		run_sql_script("{$CONFIG->path}engine/schema/mysql.sql");
 	}
 
 	public function settings() {
@@ -168,6 +206,14 @@ class ElggInstaller {
 
 		$url = "$protocol://{$_SERVER['SERVER_NAME']}$port{$uri}";
 		return $url;
+	}
+
+	protected function getPostVariables() {
+		$vars = array();
+		foreach ($_POST as $k => $v) {
+			$vars[$k] = $v;
+		}
+		return $vars;
 	}
 
 	protected function continueToNextStep($currentStep) {

@@ -13,9 +13,6 @@ a {
 	-moz-outline-style: none;
 	outline: none;
 }
-a:visited {
-	color: #0054a7;
-}
 a:hover {
 	color: #0054a7;
 	text-decoration: underline;
@@ -26,6 +23,7 @@ p {
 img {
 	border: none;
 }
+
 #elgg_wrapper {
 	background:white;
 	width:800px;
@@ -83,26 +81,49 @@ textarea:focus, input[type="password"]:focus, input[type="text"]:focus {
 	background: #e4ecf5;
 	color:#333333;
 }
-
-input[type="submit"]:hover {
-	background: #0054a7;
-	border: 4px solid #0054a7;
-}
-
 input[type="submit"] {
-	font: 16px/100% Arial, Helvetica, sans-serif;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 16px;
 	font-weight: bold;
 	color: #ffffff;
-	background:#4690d6;
+	background: #4690d6;
 	border: 4px solid #4690d6;
 	-webkit-border-radius: 4px;
 	-moz-border-radius: 4px;
 	width: auto;
 	height: 35px;
 	padding: 2px 6px 2px 6px;
-	margin:10px 0 10px 0;
+	margin: 10px 0 10px 0;
 	cursor: pointer;
+	float: right;
 }
+
+input[type="submit"]:hover {
+	background: #0054a7;
+	border: 4px solid #0054a7;
+}
+
+.install_nav a {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 16px;
+	font-weight: bold;
+	color: #ffffff;
+	background: #4690d6;
+	border: 4px solid #4690d6;
+	-webkit-border-radius: 4px;
+	-moz-border-radius: 4px;
+	padding: 2px 9px 2px 9px;
+	margin: 10px 0 10px 0;
+	cursor: pointer;
+	float: right;
+}
+
+.install_nav a:hover {
+	text-decoration: none;
+	background: #0054a7;
+	border: 4px solid #0054a7;
+}
+
 #startpage_wrapper hr {
 	border:0;
 	border-bottom:1px solid #333333;
