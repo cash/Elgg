@@ -123,7 +123,13 @@ class ElggInstaller {
 					break;
 				}
 
-				//$this->createSettingsFile($params);
+				if (!$this->createSettingsFile($submissionVars)) {
+					break;
+				}
+
+				//if (!$this->connectToDatabase()) {
+				//
+				//}
 
 				//$this->bootstrapDatabaseSettings();
 

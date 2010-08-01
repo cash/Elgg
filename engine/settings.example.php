@@ -24,22 +24,22 @@ if (!isset($CONFIG)) {
  */
 
 // Database username
-$CONFIG->dbuser = '{{user}}';
+$CONFIG->dbuser = '{{dbuser}}';
 
 // Database password
-$CONFIG->dbpass = '{{password}}';
+$CONFIG->dbpass = '{{dbpassword}}';
 
 // Database name
 $CONFIG->dbname = '{{dbname}}';
 
 // Database server
 // (For most configurations, you can leave this as 'localhost')
-$CONFIG->dbhost = '{{host}}';
+$CONFIG->dbhost = '{{dbhost}}';
 
 // Database table prefix
 // If you're sharing a database with other applications, you will want to use this
 // to differentiate Elgg's tables.
-$CONFIG->dbprefix = '{{prefix}}';
+$CONFIG->dbprefix = '{{dbprefix}}';
 
 
 /**
