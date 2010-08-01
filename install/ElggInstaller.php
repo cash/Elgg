@@ -71,7 +71,13 @@ class ElggInstaller {
 			$this->continueToNextStep('database');
 		}
 
-		$variables = array('user', 'password', 'dbname', 'host', 'prefix');
+		$variables = array(
+			'user'     => array('type' => 'text', 'value' => '', ),
+			'password' => array('type' => 'password', 'value' => ''),
+			'dbname'   => array('type' => 'text', 'value' => ''),
+			'host'     => array('type' => 'text', 'value' => 'localhost'),
+			'prefix'   => array('type' => 'text', 'value' => 'elgg_'),
+		);
 
 		$params = array(
 			'variables' => $variables,
@@ -117,8 +123,18 @@ class ElggInstaller {
 			$this->continueToNextStep('settings');
 		}
 
-		$variables = array('sitename', 'siteemail', 'wwwroot', 'path', 'dataroot');
-
+		global $CONFIG;
+		//$languages = get_installed_translations();
+		$variables = array(
+			'sitename'   => array('type' => 'text', 'value' => 'New Elgg site'),
+			'siteemail'  => array('type' => 'text', 'value' => ''),
+			'wwwroot'    => array('type' => 'text', 'value' => $CONFIG->wwwroot),
+			'path'       => array('type' => 'text', 'value' => $CONFIG->path),
+			'dataroot'   => array('type' => 'text', 'value' => ''),
+			//'language' => array('type' => 'pulldown', 'value' => 'en', 'options_values' => $languages),
+			//'siteaccess' => array('type' => 'access', 'value' =>  ACCESS_PUBLIC,),
+		);
+		
 		$params = array(
 			'variables' => $variables,
 		);
@@ -134,7 +150,13 @@ class ElggInstaller {
 		}
 
 		$variables = array('displayname', 'username', 'password1', 'password2', 'email');
-
+		$variables = array(
+			'displayname' => array('type' => 'text', 'value' => '', ),
+			'email'       => array('type' => 'text', 'value' => ''),
+			'username'    => array('type' => 'text', 'value' => ''),
+			'password1'   => array('type' => 'password', 'value' => ''),
+			'password2'   => array('type' => 'password', 'value' => ''),
+		);
 		$params = array(
 			'variables' => $variables,
 		);
