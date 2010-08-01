@@ -60,6 +60,12 @@ class ElggInstaller {
 			$this->continueToNextStep('database');
 		}
 
+		$variables = array('user', 'password', 'dbname', 'host', 'prefix');
+
+		$params = array(
+			'variables' => $variables,
+		);
+
 		$this->render('database', $params);
 	}
 
@@ -69,6 +75,12 @@ class ElggInstaller {
 
 			$this->continueToNextStep('settings');
 		}
+
+		$variables = array('sitename', 'siteemail', 'wwwroot', 'path', 'dataroot');
+
+		$params = array(
+			'variables' => $variables,
+		);
 
 		$this->render('settings', $params);
 	}
@@ -80,6 +92,11 @@ class ElggInstaller {
 			$this->continueToNextStep('admin');
 		}
 
+		$variables = array('displayname', 'username', 'password1', 'password2', 'email');
+
+		$params = array(
+			'variables' => $variables,
+		);
 		$this->render('admin', $params);
 	}
 

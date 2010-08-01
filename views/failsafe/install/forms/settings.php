@@ -1,6 +1,13 @@
 <?php
 
+$variables = $vars['variables'];
+
 $form_body = '';
+foreach ($variables as $variable) {
+	$label = elgg_echo("installation:$variable");
+	$form_body .= "<label>$label</label>";
+	$form_body .= elgg_view('input/text', array('internalname' => $variable));
+}
 
 $form_body .= elgg_view('input/submit', array('value' => 'Next'));
 

@@ -1,6 +1,16 @@
 <?php
 
+// @todo - make form sticky and add defaults
+
+$variables = $vars['variables'];
+
 $form_body = '';
+foreach ($variables as $variable) {
+	$label = elgg_echo("installation:settings:dbwizard:label:$variable");
+	$form_body .= "<label>$label</label>";
+	$form_body .= elgg_view('input/text', array('internalname' => $variable));
+}
+
 
 $form_body .= elgg_view('input/submit', array('value' => 'Next'));
 
