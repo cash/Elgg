@@ -127,18 +127,18 @@ class ElggInstaller {
 					break;
 				}
 
-				//if (!$this->connectToDatabase()) {
-				//
-				//}
+				if (!$this->connectToDatabase()) {
+					break;
+				}
 
-				//$this->bootstrapDatabaseSettings();
+				if (!$this->installDatabase()) {
+					break;
+				}
 
-				//$this->loadLibrary('database');
-
-				//$this->installDatabase($params);
+				system_message('Database has been installed.');
 
 				$this->continueToNextStep('database');
-			} while(FALSE);
+			} while (FALSE);  // PHP doesn't support breaking out of if statements
 		}
 
 		$formVars = $this->makeFormSticky($formVars, $submissionVars);
@@ -147,13 +147,8 @@ class ElggInstaller {
 	}
 
 	protected function settings($vars) {
-		if ($this->isAction) {
-			// save system settings
-
-			$this->continueToNextStep('settings');
-		}
-
 		global $CONFIG;
+		
 		//$languages = get_installed_translations();
 		$variables = array(
 			'sitename'   => array('type' => 'text', 'value' => 'New Elgg site'),
@@ -164,6 +159,14 @@ class ElggInstaller {
 			//'language' => array('type' => 'pulldown', 'value' => 'en', 'options_values' => $languages),
 			//'siteaccess' => array('type' => 'access', 'value' =>  ACCESS_PUBLIC,),
 		);
+		
+		if ($this->isAction) {
+			// save system settings
+
+			$this->continueToNextStep('settings');
+		}
+
+
 
 		$params = array(
 			'variables' => $variables,
@@ -364,18 +367,37 @@ class ElggInstaller {
 		return TRUE;
 	}
 
-	protected function bootstrapDatabaseSettings() {
+	protected function connectToDatabase() {
 		global $CONFIG;
 
 		if (!include_once("{$CONFIG->path}engine/settings.php")) {
-			throw new InstallationException("Elgg could not load the settings file.");
+			register_error("Elgg could not load the settings file.");
+			return FALSE;
 		}
+
+		if (!include_once("{$CONFIG->path}engine/lib/database.php")) {
+			register_error("Elgg could not load the database library.");
+			return FALSE;
+		}
+
+		setup_db_connections();
+
+		// check version
+
+		return TRUE;
 	}
 
-	protected function installDatabase($params) {
+	protected function installDatabase() {
 		global $CONFIG;
+
+		try {
+			run_sql_script("{$CONFIG->path}engine/schema/mysql.sql");
+		} catch (Exception $e) {
+			register_error($e->getMessage());
+			return FALSE;
+		}
 		
-		run_sql_script("{$CONFIG->path}engine/schema/mysql.sql");
+		return TRUE;
 	}
 
 }
