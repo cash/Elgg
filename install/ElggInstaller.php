@@ -33,18 +33,18 @@ class ElggInstaller {
 
 		set_error_handler('__elgg_php_error_handler');
 		set_exception_handler('__elgg_php_exception_handler');
-
-		session_name('Elgg');
-		session_start();
 	}
 
 	public function run($step) {
-		$params = $this->getPostVariables();
-		if (in_array($step, $this->getSteps())) {
-			$this->$step($params);
-		} else {
+
+		if (!in_array($step, $this->getSteps())) {
 			throw new InstallationException("$step is an unknown installation step.");
 		}
+
+		$this->finishBootstraping($step);
+
+		$params = $this->getPostVariables();
+		$this->$step($params);
 	}
 
 	protected function render($step, $vars = array()) {
@@ -146,33 +146,69 @@ class ElggInstaller {
 		$this->render('database', array('variables' => $formVars));
 	}
 
-	protected function settings($vars) {
+	protected function settings($submissionVars) {
 		global $CONFIG;
 		
-		//$languages = get_installed_translations();
-		$variables = array(
-			'sitename'   => array('type' => 'text', 'value' => 'New Elgg site'),
-			'siteemail'  => array('type' => 'text', 'value' => ''),
-			'wwwroot'    => array('type' => 'text', 'value' => $CONFIG->wwwroot),
-			'path'       => array('type' => 'text', 'value' => $CONFIG->path),
-			'dataroot'   => array('type' => 'text', 'value' => ''),
-			//'language' => array('type' => 'pulldown', 'value' => 'en', 'options_values' => $languages),
-			//'siteaccess' => array('type' => 'access', 'value' =>  ACCESS_PUBLIC,),
+		$languages = get_installed_translations();
+		$formVars = array(
+			'sitename' => array(
+				'type' => 'text',
+				'value' => 'New Elgg site',
+				'required' => TRUE,
+				),
+			'siteemail' => array(
+				'type' => 'text',
+				'value' => '',
+				'required' => FALSE,
+				),
+			'wwwroot' => array(
+				'type' => 'text',
+				'value' => $CONFIG->wwwroot,
+				'required' => TRUE,
+				),
+			'path' => array(
+				'type' => 'text',
+				'value' => $CONFIG->path,
+				'required' => TRUE,
+				),
+			'dataroot' => array(
+				'type' => 'text',
+				'value' => '',
+				'required' => TRUE,
+				),
+			'language' => array(
+				'type' => 'pulldown',
+				'value' => 'en',
+				'options_values' => $languages,
+				'required' => TRUE,
+				),
+			'siteaccess' => array(
+				'type' => 'access',
+				'value' =>  ACCESS_PUBLIC,
+				'required' => TRUE,
+				),
 		);
 		
 		if ($this->isAction) {
-			// save system settings
+			do {
+				if (!$this->validateSettingsVars($submissionVars, $formVars)) {
+					break;
+				}
 
-			$this->continueToNextStep('settings');
+				if (!$this->saveSiteSettings($submissionVars)) {
+					break;
+				}
+				
+				system_message('Site settings have been saved.');
+
+				$this->continueToNextStep('settings');
+
+			} while (FALSE);  // PHP doesn't support breaking out of if statements
 		}
+		
+		$formVars = $this->makeFormSticky($formVars, $submissionVars);
 
-
-
-		$params = array(
-			'variables' => $variables,
-		);
-
-		$this->render('settings', $params);
+		$this->render('settings', array('variables' => $formVars));
 	}
 
 	protected function admin($vars) {
@@ -245,6 +281,51 @@ class ElggInstaller {
 					. 'Please check your Elgg installation for all required files.';
 				exit;
 			}
+		}
+	}
+
+	protected function finishBootstraping($step) {
+		$dbIndex = array_search('database', $this->getSteps());
+		$stepIndex = array_search($step, $this->getSteps());
+
+		if ($stepIndex <= $dbIndex) {
+			session_name('Elgg');
+			session_start();
+		} else {
+			global $CONFIG;
+			$lib_dir = $CONFIG->path . 'engine/lib/';
+
+			if (!include_once("{$CONFIG->path}engine/settings.php")) {
+				throw new InstallationException("Elgg could not load the settings file.");
+			}
+			
+			$lib_files = array(
+				// these want to be loaded first apparently?
+				'database.php', 'actions.php',
+
+				'admin.php', 'annotations.php', 'api.php',
+				'calendar.php', 'configuration.php', 'cron.php', 'entities.php',
+				'extender.php', 'filestore.php', 'group.php',
+				'location.php', 'mb_wrapper.php',
+				'memcache.php', 'metadata.php', 'metastrings.php', 'notification.php',
+				'objects.php', 'opendd.php', 'pagehandler.php',
+				'pageowner.php', 'pam.php', 'plugins.php', 'query.php',
+				'relationships.php', 'river.php', 'sites.php', 'social.php',
+				'statistics.php', 'tags.php', 'usersettings.php',
+				'users.php', 'version.php', 'widgets.php', 'xml.php', 'xml-rpc.php'
+ 			);
+			
+			foreach ($lib_files as $file) {
+				$path = $lib_dir . $file;
+				if (!include_once($path)) {
+					throw new InstallationException("Could not load {$file}");
+				}
+			}
+
+			set_default_config();
+
+			trigger_elgg_event('boot', 'system');
+			trigger_elgg_event('init', 'system');
 		}
 	}
 
@@ -400,4 +481,97 @@ class ElggInstaller {
 		return TRUE;
 	}
 
+	/**
+	 * Site settings support methods
+	 */
+	protected function validateSettingsVars($submissionVars, $formVars) {
+
+		foreach ($formVars as $field => $info) {
+			if ($info['required'] == TRUE && !$submissionVars[$field]) {
+				$name = elgg_echo("install:$field");
+				register_error("$name is required");
+				return FALSE;
+			}
+		}
+
+		// check that data root is writable
+		if (!is_writable($submissionVars['dataroot'])) {
+			register_error("Your data directory {$submissionVars['dataroot']} is not writable by the web server.");
+			return FALSE;
+		}
+
+		// check that data root is not subdirectory of Elgg root
+		if (stripos($submissionVars['dataroot'], $submissionVars['path']) !== FALSE) {
+			register_error("Your data directory {$submissionVars['dataroot']} must be outside of your install path for security.");
+			return FALSE;
+		}
+
+		// @todo move is_email_address to a better library than users.php
+		// check that email address is email address
+		//if ($submissionVars['siteemail'] && !is_email_address($submissionVars['siteemail'])) {
+		//	register_error("{$submissionVars['']} is not a valid email address.");
+		//	return FALSE;
+		//}
+
+		// check that url is a url
+
+
+		return TRUE;
+	}
+
+	protected function saveSiteSettings($submissionVars) {
+
+		// ensure that file path, data path, and www root end in /
+		$submissionVars['path'] = sanitise_filepath($submissionVars['path']);
+		$submissionVars['dataroot'] = sanitise_filepath($submissionVars['dataroot']);
+		$submissionVars['wwwroot'] = sanitise_filepath($submissionVars['wwwroot']);
+
+		$site = new ElggSite();
+		$site->name = $submissionVars['sitename'];
+		$site->url = $submissionVars['wwwroot'];
+		$site->access_id = ACCESS_PUBLIC;
+		$site->email = $submissionVars['siteemail'];
+		$guid = $site->save();
+
+		if (!$guid) {
+			register_error("Unable to create the site.");
+			return FALSE;
+		}
+
+		// bootstrap site info
+		$CONFIG->site_guid = $guid;
+		$CONFIG->site = $site;
+
+		
+		//datalist_set('installed',time());
+		datalist_set('path', $submissionVars['path']);
+		datalist_set('dataroot', $submissionVars['dataroot']);
+		datalist_set('default_site', $site->getGUID());
+		datalist_set('version', get_version());
+
+		set_config('view', 'default', $site->getGUID());
+		set_config('language', $submissionVars['language'], $site->getGUID());
+		set_config('default_access', $submissionVars['siteaccess'], $site->getGUID());
+		set_config('allow_registration', TRUE, $site->getGUID());
+		set_config('walled_garden', FALSE, $site->getGUID());
+
+		// activate some plugins by default
+		// activate plugins with manifest.xml: elgg_install_state = enabled
+		$plugins = get_plugin_list();
+		var_dump($plugins);
+		foreach ($plugins as $plugin) {
+			if ($manifest = load_plugin_manifest($plugin)) {
+				if (isset($manifest['elgg_install_state']) && $manifest['elgg_install_state'] == 'enabled') {
+					enable_plugin($plugin);
+				}
+			}
+		}
+
+		// reset the views path in case of installing over an old data dir.
+		$dataroot = datalist_get('dataroot');
+		$cache = new ElggFileCache($dataroot);
+		$cache->delete('view_paths');
+
+		return TRUE;
+	}
 }
