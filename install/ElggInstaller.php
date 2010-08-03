@@ -211,28 +211,59 @@ class ElggInstaller {
 		$this->render('settings', array('variables' => $formVars));
 	}
 
-	protected function admin($vars) {
+	protected function admin($submissionVars) {
+		$formVars = array(
+			'displayname' => array(
+				'type' => 'text',
+				'value' => '',
+				'required' => TRUE,
+				),
+			'email' => array(
+				'type' => 'text',
+				'value' => '',
+				'required' => TRUE,
+				),
+			'username' => array(
+				'type' => 'text',
+				'value' => '',
+				'required' => TRUE,
+				),
+			'password1' => array(
+				'type' => 'password',
+				'value' => '',
+				'required' => TRUE,
+				),
+			'password2' => array(
+				'type' => 'password',
+				'value' => '',
+				'required' => TRUE,
+				),
+		);
+
 		if ($this->isAction) {
-			// create admin account
+			do {
+				if (!$this->validateAdminVars($submissionVars, $formVars)) {
+					break;
+				}
 
-			$this->continueToNextStep('admin');
+				if (!$this->createAdminAccount($submissionVars)) {
+					break;
+				}
+				
+				system_message('Admin account has been created.');
+
+				$this->continueToNextStep('admin');
+
+			} while (FALSE);  // PHP doesn't support breaking out of if statements
 		}
+		
+		$formVars = $this->makeFormSticky($formVars, $submissionVars);
 
-		$variables = array('displayname', 'username', 'password1', 'password2', 'email');
-		$variables = array(
-			'displayname' => array('type' => 'text', 'value' => '', ),
-			'email'       => array('type' => 'text', 'value' => ''),
-			'username'    => array('type' => 'text', 'value' => ''),
-			'password1'   => array('type' => 'password', 'value' => ''),
-			'password2'   => array('type' => 'password', 'value' => ''),
-		);
-		$params = array(
-			'variables' => $variables,
-		);
-		$this->render('admin', $params);
+		$this->render('admin', array('variables' => $formVars));
 	}
 
 	protected function complete($vars) {
+
 		$this->render('complete');
 	}
 
@@ -285,13 +316,16 @@ class ElggInstaller {
 	}
 
 	protected function finishBootstraping($step) {
+
+		// install has its own session handling
+		session_name('Elgg');
+		session_start();
+		unregister_elgg_event_handler('boot', 'system', 'session_init');
+
 		$dbIndex = array_search('database', $this->getSteps());
 		$stepIndex = array_search($step, $this->getSteps());
 
-		if ($stepIndex <= $dbIndex) {
-			session_name('Elgg');
-			session_start();
-		} else {
+		if ($stepIndex > $dbIndex) {
 			global $CONFIG;
 			$lib_dir = $CONFIG->path . 'engine/lib/';
 
@@ -520,6 +554,7 @@ class ElggInstaller {
 	}
 
 	protected function saveSiteSettings($submissionVars) {
+		global $CONFIG;
 
 		// ensure that file path, data path, and www root end in /
 		$submissionVars['path'] = sanitise_filepath($submissionVars['path']);
@@ -527,11 +562,11 @@ class ElggInstaller {
 		$submissionVars['wwwroot'] = sanitise_filepath($submissionVars['wwwroot']);
 
 		$site = new ElggSite();
-		$site->name = $submissionVars['sitename'];
-		$site->url = $submissionVars['wwwroot'];
+		$site->name      = $submissionVars['sitename'];
+		$site->url       = $submissionVars['wwwroot'];
 		$site->access_id = ACCESS_PUBLIC;
-		$site->email = $submissionVars['siteemail'];
-		$guid = $site->save();
+		$site->email     = $submissionVars['siteemail'];
+		$guid            = $site->save();
 
 		if (!$guid) {
 			register_error("Unable to create the site.");
@@ -542,8 +577,7 @@ class ElggInstaller {
 		$CONFIG->site_guid = $guid;
 		$CONFIG->site = $site;
 
-		
-		//datalist_set('installed',time());
+		datalist_set('installed', time());
 		datalist_set('path', $submissionVars['path']);
 		datalist_set('dataroot', $submissionVars['dataroot']);
 		datalist_set('default_site', $site->getGUID());
@@ -558,7 +592,6 @@ class ElggInstaller {
 		// activate some plugins by default
 		// activate plugins with manifest.xml: elgg_install_state = enabled
 		$plugins = get_plugin_list();
-		var_dump($plugins);
 		foreach ($plugins as $plugin) {
 			if ($manifest = load_plugin_manifest($plugin)) {
 				if (isset($manifest['elgg_install_state']) && $manifest['elgg_install_state'] == 'enabled') {
@@ -571,6 +604,58 @@ class ElggInstaller {
 		$dataroot = datalist_get('dataroot');
 		$cache = new ElggFileCache($dataroot);
 		$cache->delete('view_paths');
+
+		return TRUE;
+	}
+
+	/**
+	 * Admin account support methods
+	 */
+
+	protected function validateAdminVars($submissionVars, $formVars) {
+		
+		foreach ($formVars as $field => $info) {
+			if ($info['required'] == TRUE && !$submissionVars[$field]) {
+				$name = elgg_echo("install:$field");
+				register_error("$name is required");
+				return FALSE;
+			}
+		}
+
+		if ($submissionVars['password1'] !== $submissionVars['password2']) {
+			register_error("Your passwords must match.");
+			return FALSE;
+		}
+
+		if (trim($submissionVars['password1']) == "") {
+			register_error("Password cannot be empty.");
+			return FALSE;
+		}
+
+		return TRUE;
+	}
+
+	protected function createAdminAccount($submissionVars) {
+		global $CONFIG;
+		
+		$guid = register_user(
+				$submissionVars['username'],
+				$submissionVars['password1'],
+				$submissionVars['displayname'],
+				$submissionVars['email']
+				);
+
+		if (!$guid) {
+			register_error("Unable to create an admin account.");
+			return FALSE;
+		}
+
+		// need a logged in user to set admin flag so we go directly to database
+		$result = update_data("UPDATE {$CONFIG->dbprefix}users_entity set admin='yes' where guid=$guid");
+		if (!$result) {
+			register_error("Unable to give new user account admin privileges.");
+			return FALSE;
+		}
 
 		return TRUE;
 	}
