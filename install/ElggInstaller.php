@@ -22,6 +22,9 @@ class ElggInstaller {
 
 	protected $isAction;
 
+	/**
+	 * Constructor bootstraps the Elgg engine
+	 */
 	public function __construct() {
 		$this->isAction = $_SERVER['REQUEST_METHOD'] === 'POST';
 
@@ -35,6 +38,11 @@ class ElggInstaller {
 		set_exception_handler('__elgg_php_exception_handler');
 	}
 
+	/**
+	 * Dispatches a request to one of the step controllers
+	 *
+	 * @param string $step
+	 */
 	public function run($step) {
 
 		if (!in_array($step, $this->getSteps())) {
@@ -43,10 +51,22 @@ class ElggInstaller {
 
 		$this->finishBootstraping($step);
 
+		// check if this is an install being resumed
+		$newStep = $this->resumeInstall($step);
+		if ($newStep) {
+			$step = $newStep;
+		}
+
 		$params = $this->getPostVariables();
 		$this->$step($params);
 	}
 
+	/**
+	 * Renders the data passed by a controller
+	 *
+	 * @param string $step
+	 * @param array $vars
+	 */
 	protected function render($step, $vars = array()) {
 
 		$vars['next_step'] = $this->getNextStep($step);
@@ -69,15 +89,27 @@ class ElggInstaller {
 	 * Step controllers
 	 */
 
+	/**
+	 * Welcome controller
+	 *
+	 * @param array $vars Not used
+	 */
 	protected function welcome($vars) {
 		$this->render('welcome');
 	}
 
+	/**
+	 * Requirements controller
+	 *
+	 * Checks version of php, libraries, permissions, and rewrite rules
+	 *
+	 * @param array $vars
+	 */
 	protected function requirements($vars) {
 
 		// attempt to create .htaccess file
 
-		// check PHP parameters
+		// check PHP parameters and libraries
 
 		// check permissions on engine directory
 
@@ -86,6 +118,13 @@ class ElggInstaller {
 		$this->render('requirements', $params);
 	}
 
+	/**
+	 * Database set up controller
+	 * 
+	 * Creates the settings.php file and creates the database tables
+	 *
+	 * @param array $submissionVars Submitted form variables
+	 */
 	protected function database($submissionVars) {
 
 		$formVars = array(
@@ -146,6 +185,13 @@ class ElggInstaller {
 		$this->render('database', array('variables' => $formVars));
 	}
 
+	/**
+	 * Site settings controller
+	 *
+	 * Sets the site name, URL, data directory, etc.
+	 *
+	 * @param array $submissionVars
+	 */
 	protected function settings($submissionVars) {
 		global $CONFIG;
 		
@@ -211,6 +257,13 @@ class ElggInstaller {
 		$this->render('settings', array('variables' => $formVars));
 	}
 
+	/**
+	 * Admin account controller
+	 *
+	 * Creates an admin user account
+	 *
+	 * @param array $submissionVars
+	 */
 	protected function admin($submissionVars) {
 		$formVars = array(
 			'displayname' => array(
@@ -262,6 +315,11 @@ class ElggInstaller {
 		$this->render('admin', array('variables' => $formVars));
 	}
 
+	/**
+	 * Controller for last step
+	 *
+	 * @param array $vars
+	 */
 	protected function complete($vars) {
 
 		$this->render('complete');
@@ -271,19 +329,41 @@ class ElggInstaller {
 	 * Step management
 	 */
 
+	/**
+	 * Get an array of steps
+	 *
+	 * @return array
+	 */
 	protected function getSteps() {
 		return $this->steps;
 	}
 
+	/**
+	 * Forwards the browser to the next step
+	 * 
+	 * @param string $currentStep
+	 */
 	protected function continueToNextStep($currentStep) {
 		$this->isAction = FALSE;
 		forward($this->getNextStepUrl($currentStep));
 	}
 
+	/**
+	 * Get the next step as a string
+	 *
+	 * @param string $currentStep
+	 * @return string
+	 */
 	protected function getNextStep($currentStep) {
 		return $this->steps[1 + array_search($currentStep, $this->steps)];
 	}
 
+	/**
+	 * Get the URL of the next step
+	 * 
+	 * @param string $currentStep
+	 * @return string
+	 */
 	protected function getNextStepUrl($currentStep) {
 		global $CONFIG;
 		$nextStep = $this->getNextStep($currentStep);
@@ -291,9 +371,30 @@ class ElggInstaller {
 	}
 
 	/**
+	 * Check if this is a case of a install being resumed and figure
+	 * out where to continue from. Returns the best guess on the step.
+	 *
+	 * @param string $step
+	 * @return string
+	 */
+	protected function resumeInstall($step) {
+		// does settings exist
+
+		// is database initialized
+
+		// are site settings set
+
+		// is admin account created
+		// error page that install is finished
+	}
+
+	/**
 	 * Bootstraping
 	 */
-	
+
+	/**
+	 * Load the essential libraries of the engine
+	 */
 	protected function bootstrapEngine() {
 		global $CONFIG;
 
@@ -315,6 +416,11 @@ class ElggInstaller {
 		}
 	}
 
+	/**
+	 * Load remaining engine libraries and complete bootstraping (see start.php)
+	 * 
+	 * @param string $step
+	 */
 	protected function finishBootstraping($step) {
 
 		// install has its own session handling
@@ -322,6 +428,7 @@ class ElggInstaller {
 		session_start();
 		unregister_elgg_event_handler('boot', 'system', 'session_init');
 
+		// once the database has been created, load rest of engine
 		$dbIndex = array_search('database', $this->getSteps());
 		$stepIndex = array_search($step, $this->getSteps());
 
@@ -363,6 +470,9 @@ class ElggInstaller {
 		}
 	}
 
+	/**
+	 * Set up configuration variables
+	 */
 	protected function bootstrapConfig() {
 		global $CONFIG;
 		if (!isset($CONFIG)) {
@@ -374,6 +484,11 @@ class ElggInstaller {
 		$CONFIG->path = dirname(dirname(__FILE__)) . '/';
 	}
 
+	/**
+	 * Get the best guess at the base URL
+	 * @todo Should this be a core function?
+	 * @return string
+	 */
 	protected function getBaseUrl() {
 		$protocol = 'http';
 		if (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") {
@@ -394,7 +509,13 @@ class ElggInstaller {
 	/**
 	 * Action handling methods
 	 */
-	
+
+	/**
+	 * Return an associative array of post variables
+	 * (could be selective based on expected variables)
+	 * 
+	 * @return array
+	 */
 	protected function getPostVariables() {
 		$vars = array();
 		foreach ($_POST as $k => $v) {
@@ -403,6 +524,13 @@ class ElggInstaller {
 		return $vars;
 	}
 
+	/**
+	 * If form is reshown, remember previously submitted variables
+	 *
+	 * @param array $formVars
+	 * @param array $submissionVars
+	 * @return array
+	 */
 	protected function makeFormSticky($formVars, $submissionVars) {
 		foreach ($submissionVars as $field => $value) {
 			$formVars[$field]['value'] = $value;
@@ -412,6 +540,14 @@ class ElggInstaller {
 
 	/**
 	 * Database support methods
+	 */
+
+	/**
+	 * Validate the variables for the database step
+	 *
+	 * @param array $submissionVars
+	 * @param array $formVars
+	 * @return bool
 	 */
 	protected function validateDatabaseVars($submissionVars, $formVars) {
 
@@ -458,6 +594,12 @@ class ElggInstaller {
 		return $result;
 	}
 
+	/**
+	 * Writes the settings file to the engine directory
+	 *
+	 * @param array $params
+	 * @return bool
+	 */
 	protected function createSettingsFile($params) {
 		global $CONFIG;
 
@@ -482,6 +624,11 @@ class ElggInstaller {
 		return TRUE;
 	}
 
+	/**
+	 * Bootstrap database connection before entire engine is available
+	 *
+	 * @return bool
+	 */
 	protected function connectToDatabase() {
 		global $CONFIG;
 
@@ -497,11 +644,16 @@ class ElggInstaller {
 
 		setup_db_connections();
 
-		// check version
+		// @todo check MySQL version
 
 		return TRUE;
 	}
 
+	/**
+	 * Create the database tables
+	 * 
+	 * @return bool
+	 */
 	protected function installDatabase() {
 		global $CONFIG;
 
@@ -517,6 +669,14 @@ class ElggInstaller {
 
 	/**
 	 * Site settings support methods
+	 */
+
+	/**
+	 * Validate the site settings form variables
+	 *
+	 * @param array $submissionVars
+	 * @param array $formVars
+	 * @return bool
 	 */
 	protected function validateSettingsVars($submissionVars, $formVars) {
 
@@ -547,12 +707,18 @@ class ElggInstaller {
 		//	return FALSE;
 		//}
 
-		// check that url is a url
+		// @todo check that url is a url
 
 
 		return TRUE;
 	}
 
+	/**
+	 * Initialize the site including site entity, plugins, and configuration
+	 *
+	 * @param array $submissionVars
+	 * @return bool
+	 */
 	protected function saveSiteSettings($submissionVars) {
 		global $CONFIG;
 
@@ -589,16 +755,7 @@ class ElggInstaller {
 		set_config('allow_registration', TRUE, $site->getGUID());
 		set_config('walled_garden', FALSE, $site->getGUID());
 
-		// activate some plugins by default
-		// activate plugins with manifest.xml: elgg_install_state = enabled
-		$plugins = get_plugin_list();
-		foreach ($plugins as $plugin) {
-			if ($manifest = load_plugin_manifest($plugin)) {
-				if (isset($manifest['elgg_install_state']) && $manifest['elgg_install_state'] == 'enabled') {
-					enable_plugin($plugin);
-				}
-			}
-		}
+		$this->enablePlugins();
 
 		// reset the views path in case of installing over an old data dir.
 		$dataroot = datalist_get('dataroot');
@@ -609,9 +766,31 @@ class ElggInstaller {
 	}
 
 	/**
+	 * Enable a set of default plugins
+	 */
+	protected function enablePlugins() {
+		// activate plugins with manifest.xml: elgg_install_state = enabled
+		$plugins = get_plugin_list();
+		foreach ($plugins as $plugin) {
+			if ($manifest = load_plugin_manifest($plugin)) {
+				if (isset($manifest['elgg_install_state']) && $manifest['elgg_install_state'] == 'enabled') {
+					enable_plugin($plugin);
+				}
+			}
+		}
+	}
+
+	/**
 	 * Admin account support methods
 	 */
 
+	/**
+	 * Validate account form variables
+	 *
+	 * @param array $submissionVars
+	 * @param array $formVars
+	 * @return bool
+	 */
 	protected function validateAdminVars($submissionVars, $formVars) {
 		
 		foreach ($formVars as $field => $info) {
@@ -635,6 +814,12 @@ class ElggInstaller {
 		return TRUE;
 	}
 
+	/**
+	 * Create a user account for the admin
+	 *
+	 * @param array $submissionVars
+	 * @return bool
+	 */
 	protected function createAdminAccount($submissionVars) {
 		global $CONFIG;
 		
@@ -650,6 +835,7 @@ class ElggInstaller {
 			return FALSE;
 		}
 
+		// @todo - register plugin hook instead for can edit
 		// need a logged in user to set admin flag so we go directly to database
 		$result = update_data("UPDATE {$CONFIG->dbprefix}users_entity set admin='yes' where guid=$guid");
 		if (!$result) {
