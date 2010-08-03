@@ -7,6 +7,12 @@
  * @link http://elgg.org/
  */
 
+// check for PHP 4 before we do anything else
+if (version_compare(PHP_VERSION, '5.0.0', '<')) {
+    echo "Your server's version of PHP (" . PHP_VERSION . ") is too old to run Elgg.\n";
+	exit;
+}
+
 // If we're already installed, go back to the homepage
 // @todo
 
