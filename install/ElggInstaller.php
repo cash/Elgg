@@ -565,14 +565,50 @@ class ElggInstaller {
 	 * @return bool
 	 */
 	protected function createHtaccess(&$report) {
-		$report['htaccess'] = array(
-			array(
-				'severity' => 'failure',
-				'message' => elgg_echo('install:check:htaccess'),
-			)
-		);
+		global $CONFIG;
 
-		return FALSE;
+		if (!is_writable($CONFIG->path)) {
+			$report['htaccess'] = array(
+				array(
+					'severity' => 'failure',
+					'message' => elgg_echo('install:check:root'),
+				)
+			);
+			return FALSE;
+		}
+
+		$filename = "{$CONFIG->path}.htaccess";
+		if (file_exists($filename)) {
+			// check that this is the Elgg .htaccess
+			$data = file_get_contents($filename);
+			if ($data === FALSE) {
+				// don't have permission to read the file
+			}
+			if (strpos($data, 'Elgg') === FALSE) {
+				$report['htaccess'] = array(
+					array(
+						'severity' => 'failure',
+						'message' => elgg_echo('install:check:htaccess_exists'),
+					)
+				);
+			} else {
+				// Elgg .htaccess is already there
+				return TRUE;
+			}
+		}
+
+		// create the .htaccess file
+		$result = copy("{$CONFIG->path}htaccess_dist", $filename);
+		if (!$result) {
+			$report['htaccess'] = array(
+				array(
+					'severity' => 'failure',
+					'message' => elgg_echo('install:check:htaccess_fail'),
+				)
+			);
+		}
+
+		return $result;
 	}
 
 	/**
@@ -603,7 +639,7 @@ class ElggInstaller {
 	protected function checkPHP(&$report) {
 		$phpReport = array();
 
-		if (version_compare(PHP_VERSION, '5.3.0', '<')) {
+		if (version_compare(PHP_VERSION, '5.2.0', '<')) {
 			$phpReport[] = array(
 				'severity' => 'failure',
 				'message' => elgg_echo('install:check:php:version')
@@ -614,9 +650,14 @@ class ElggInstaller {
 
 		$this->checkPhpDirectives($phpReport);
 
-		if (count($phpReport) > 0) {
-			$report['php'] = $phpReport;
+		if (count($phpReport) == 0) {
+			$phpReport[] = array(
+				'severity' => 'info',
+				'message' => elgg_echo('install:check:php:success')
+			);
 		}
+
+		$report['php'] = $phpReport;
 	}
 
 	/**
