@@ -45,6 +45,9 @@ class ElggInstaller {
 	 */
 	public function run($step) {
 
+		// check of this a mod rewrite test coming in
+		$this->runModRewriteTest();
+
 		if (!in_array($step, $this->getSteps())) {
 			throw new InstallationException("$step is an unknown installation step.");
 		}
@@ -759,6 +762,17 @@ class ElggInstaller {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Check if the request is coming from the mod rewrite test on the
+	 * requirements page.
+	 */
+	protected function runModRewriteTest() {
+		if (strpos($_SERVER['REQUEST_URI'], 'modrewrite.php') !== FALSE) {
+			echo 'success';
+			exit;
+		}
 	}
 
 	/**
