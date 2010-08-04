@@ -107,13 +107,29 @@ class ElggInstaller {
 	 */
 	protected function requirements($vars) {
 
-		// attempt to create .htaccess file
+		$report = array();
 
-		// check PHP parameters and libraries
+		// attempt to create .htaccess file
+		$htaccessExists = $this->createHtaccess($report);
 
 		// check permissions on engine directory
+		$this->checkEngineDir($report);
+		
+		// check PHP parameters and libraries
+		$this->checkPHP($report);
 
 		// check rewrite module
+		if ($htaccessExists) {
+			$this->checkRewriteModule($report);
+		}
+
+		// any failures
+		$numFailures = $this->countNumFailures($report);
+
+		$params = array(
+			'report' => $report,
+			'num_failures' => $numFailures,
+		);
 
 		$this->render('requirements', $params);
 	}
@@ -538,6 +554,159 @@ class ElggInstaller {
 		return $formVars;
 	}
 
+	/**
+	 * Requirement checks support methods
+	 */
+
+	/**
+	 * Create Elgg's .htaccess file or confirm that it exists
+	 *
+	 * @param array $report Reference to the report array
+	 * @return bool
+	 */
+	protected function createHtaccess(&$report) {
+		$report['htaccess'] = array(
+			array(
+				'severity' => 'failure',
+				'message' => elgg_echo('install:check:htaccess'),
+			)
+		);
+
+		return FALSE;
+	}
+
+	/**
+	 * Check that the engine is writable
+	 * @param array $report
+	 * @return bool
+	 */
+	protected function checkEngineDir(&$report) {
+		global $CONFIG;
+
+		$writable = is_writable("{$CONFIG->path}engine");
+		if (!$writable) {
+			$report['engine'] = array(
+				array(
+					'severity' => 'warning',
+					'message' => elgg_echo('install:check:enginedir'),
+				)
+			);
+		}
+
+		return $writable;
+	}
+
+	/**
+	 * Check version of PHP, extensions, and variables
+	 * @param array $report
+	 */
+	protected function checkPHP(&$report) {
+		$phpReport = array();
+
+		if (version_compare(PHP_VERSION, '5.3.0', '<')) {
+			$phpReport[] = array(
+				'severity' => 'failure',
+				'message' => elgg_echo('install:check:php:version')
+			);
+		}
+
+		$this->checkPhpExtensions($phpReport);
+
+		$this->checkPhpDirectives($phpReport);
+
+		if (count($phpReport) > 0) {
+			$report['php'] = $phpReport;
+		}
+	}
+
+	/**
+	 * Check the server's PHP extensions
+	 *
+	 * @param array $phpReport
+	 */
+	protected function checkPhpExtensions(&$phpReport) {
+		$extensions = get_loaded_extensions();
+		$requiredExtensions = array(
+			'mysql',
+			'json',
+			'xml',
+			'gd',
+		);
+		foreach ($requiredExtensions as $extension) {
+			if (!in_array($extension, $extensions)) {
+				$phpReport[] = array(
+					'severity' => 'failure',
+					'message' => elgg_echo("install:check:php:$extension")
+				);
+			}
+		}
+
+		$recommendedExtensions = array(
+			'mbstring',
+			'curl',
+		);
+		foreach ($recommendedExtensions as $extension) {
+			if (!in_array($extension, $extensions)) {
+				$phpReport[] = array(
+					'severity' => 'warning',
+					'message' => elgg_echo("install:check:php:$extension")
+				);
+			}
+		}
+	}
+
+	/**
+	 * Check PHP parameters
+	 * 
+	 * @param array $phpReport
+	 */
+	protected function checkPhpDirectives(&$phpReport) {
+		if (ini_get('open_basedir')) {
+			$phpReport[] = array(
+				'severity' => 'warning',
+				'message' => elgg_echo("install:check:php:open_basedir")
+			);
+		}
+
+		if (ini_get('safe_mode')) {
+			$phpReport[] = array(
+				'severity' => 'warning',
+				'message' => elgg_echo("install:check:php:safe_mode")
+			);
+		}
+	}
+
+	/**
+	 * Confirm that Apache's rewrite module and AllowOverride are set up
+	 * @param array $report
+	 * @return bool
+	 */
+	protected function checkRewriteModule(&$report) {
+		$rewriteReport = array();
+
+		$report['rewrite'] = $rewriteReport;
+		return FALSE;
+	}
+
+	/**
+	 * Count the number of failures in the requirements report
+	 *
+	 * @param array $report
+	 * @return int
+	 */
+	protected function countNumFailures($report) {
+		$count = 0;
+		foreach ($report as $category => $checks) {
+			foreach ($checks as $check) {
+				if ($item['severity'] === 'failure') {
+					$count++;
+				}
+			}
+		}
+
+		return $count;
+	}
+	
 	/**
 	 * Database support methods
 	 */
