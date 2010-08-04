@@ -15,4 +15,11 @@ foreach ($report as $category => $checks) {
 	echo "</ul>";
 }
 
+$vars['refresh'] = TRUE;
+
+// cannot advance to next step with a failure
+if ($vars['num_failures'] != 0) {
+	$vars['advance'] = FALSE;
+}
+
 echo elgg_view('install/nav', $vars);
