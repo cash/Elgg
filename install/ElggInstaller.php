@@ -723,10 +723,42 @@ class ElggInstaller {
 	 * @return bool
 	 */
 	protected function checkRewriteModule(&$report) {
-		$rewriteReport = array();
+		global $CONFIG;
 
-		$report['rewrite'] = $rewriteReport;
-		return FALSE;
+		$result = FALSE;
+		$url = "{$CONFIG->wwwroot}modrewrite.php";
+
+		if (function_exists('curl_init')) {
+			// try curl if installed
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			$response = curl_exec($ch);
+			curl_close($ch);
+			$result = $response === 'success';
+		} else if (!ini_get('allow_url_fopen')) {
+			// use file_get_contents as fallback
+			$data = file_get_contents($url);
+			$result = $data === 'success';
+		}
+
+		if ($result) {
+			$report['htaccess'] = array(
+				array(
+					'severity' => 'info',
+					'message' => elgg_echo('install:check:rewrite:success'),
+				)
+			);
+		} else {
+			$report['htaccess'] = array(
+				array(
+					'severity' => 'warning',
+					'message' => elgg_echo('install:check:rewrite:fail'),
+				)
+			);
+		}
+
+		return $result;
 	}
 
 	/**
