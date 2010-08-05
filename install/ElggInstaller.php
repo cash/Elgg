@@ -875,6 +875,14 @@ class ElggInstaller {
 
 		$result = mysql_select_db($dbname, $mysql_dblink);
 
+		// check MySQL version - must be 5.0 or >
+		$version = mysql_get_server_info();
+		$points = explode('.', $version);
+		if ($points[0] < 6) {
+			register_error("MySQL must be 5.0 or above. Your server is using $version.");
+			return FALSE;
+		}
+
 		mysql_close($mysql_dblink);
 
 		if (!$result) {
@@ -936,14 +944,6 @@ class ElggInstaller {
 			setup_db_connections();
 		} catch (Exception $e) {
 			register_error($e->getMessage());
-			return FALSE;
-		}
-
-		// check MySQL version - must be 5.0 or >
-		$version = mysql_get_server_info();
-		$points = explode('.', $version);
-		if ($points[0] < 5) {
-			register_error("MySQL must be 5.0 or above. Your server is using $version.");
 			return FALSE;
 		}
 
