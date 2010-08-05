@@ -764,7 +764,7 @@ class ElggInstaller {
 
 		$url = "{$CONFIG->wwwroot}modrewrite.php";
 
-		if (!function_exists('curl_init')) {
+		if (function_exists('curl_init')) {
 			// try curl if installed
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $url);
