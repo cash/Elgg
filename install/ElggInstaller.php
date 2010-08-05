@@ -126,7 +126,7 @@ class ElggInstaller {
 			$this->checkRewriteModule($report);
 		}
 
-		// any failures
+		// any failures?
 		$numFailures = $this->countNumFailures($report);
 
 		$params = array(
@@ -631,7 +631,7 @@ class ElggInstaller {
 		if (!$writable) {
 			$report['engine'] = array(
 				array(
-					'severity' => 'warning',
+					'severity' => 'failure',
 					'message' => elgg_echo('install:check:enginedir'),
 				)
 			);
@@ -790,7 +790,7 @@ class ElggInstaller {
 		$count = 0;
 		foreach ($report as $category => $checks) {
 			foreach ($checks as $check) {
-				if ($item['severity'] === 'failure') {
+				if ($check['severity'] === 'failure') {
 					$count++;
 				}
 			}
