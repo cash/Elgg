@@ -177,15 +177,23 @@ class ElggInstaller {
 				),
 		);
 
+		if ($this->checkSettingsFile()) {
+			// user manually created settings file so we fake out action test
+			$this->isAction = TRUE;
+		}
+
 		if ($this->isAction) {
 			do {
-				if (!$this->validateDatabaseVars($submissionVars, $formVars)) {
-					// error so we break out of action and serve same page
-					break;
-				}
+				// only create settings file if it doesn't exist
+				if (!$this->checkSettingsFile()) {
+					if (!$this->validateDatabaseVars($submissionVars, $formVars)) {
+						// error so we break out of action and serve same page
+						break;
+					}
 
-				if (!$this->createSettingsFile($submissionVars)) {
-					break;
+					if (!$this->createSettingsFile($submissionVars)) {
+						break;
+					}
 				}
 
 				// check db version and connect 
@@ -205,7 +213,14 @@ class ElggInstaller {
 
 		$formVars = $this->makeFormSticky($formVars, $submissionVars);
 
-		$this->render('database', array('variables' => $formVars));
+		$params = array('variables' => $formVars,);
+
+		if ($this->checkSettingsFile()) {
+			// settings file exists and we're here so failed to create database
+			$params['failure'] = TRUE;
+		}
+
+		$this->render('database', $params);
 	}
 
 	/**
@@ -917,7 +932,12 @@ class ElggInstaller {
 			return FALSE;
 		}
 
-		setup_db_connections();
+		try  {
+			setup_db_connections();
+		} catch (Exception $e) {
+			register_error($e->getMessage());
+			return FALSE;
+		}
 
 		// check MySQL version - must be 5.0 or >
 		$version = mysql_get_server_info();

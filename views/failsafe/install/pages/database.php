@@ -1,8 +1,16 @@
 <?php
 /**
  * Install database page
+ *
+ * @uses $vars['failure'] Settings file exists but something went wrong
  */
 
-echo elgg_echo('install:database:instructions');
-
-echo elgg_view('install/forms/database', $vars);
+if (isset($vars['failure']) && $vars['failure']) {
+	echo elgg_echo('install:database:error');
+	$vars['refresh'] = TRUE;
+	$vars['advance'] = FALSE;
+	echo elgg_view('install/nav', $vars);
+} else {
+	echo elgg_echo('install:database:instructions');
+	echo elgg_view('install/forms/database', $vars);
+}
