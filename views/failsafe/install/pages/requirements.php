@@ -5,7 +5,7 @@
  * @uses $vars['num_failures] Number of requirements failures
  */
 
-echo elgg_echo('install:requirements:instructions');
+echo autop(elgg_echo('install:requirements:instructions'));
 
 $report = $vars['report'];
 foreach ($report as $category => $checks) {

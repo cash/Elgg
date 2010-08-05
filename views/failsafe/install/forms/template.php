@@ -22,6 +22,6 @@ foreach ($variables as $field => $params) {
 	$form_body .= '</p>';
 }
 
-$form_body .= elgg_view('input/submit', array('value' => 'Next'));
+$form_body .= elgg_view('input/submit', array('value' => elgg_echo('next')));
 
 echo $form_body;

@@ -3,6 +3,6 @@
  * Install create admin account page
  */
 
-echo elgg_echo('install:admin:instructions');
+echo autop(elgg_echo('install:admin:instructions'));
 
 echo elgg_view('install/forms/admin', $vars);

@@ -38,8 +38,6 @@ $english = array(
  */
 	'exception:title' => "Elgg Error",
 
-	'InstallationException:CantCreateSite' => "Unable to create a default ElggSite with credentials Name:%s, Url: %s",
-
 	'actionundefined' => "The requested action (%s) was not defined in the system.",
 	'actionloggedout' => "Sorry, you cannot perform this action while logged out.",
 	'actionunauthorized' => 'You are unauthorized to perform this action',
@@ -163,15 +161,6 @@ $english = array(
 	'CallException:NotRPCCall' => "Call does not appear to be a valid XML-RPC call",
 
 	'PluginException:NoPluginName' => "The plugin name could not be found",
-
-	'ConfigurationException:BadDatabaseVersion' => "The database backend you have installed doesn't meet the basic requirements to run Elgg. Please consult your documentation.",
-	'ConfigurationException:BadPHPVersion' => "You need at least PHP version 5.2 to run Elgg.",
-	'configurationwarning:phpversion' => "Elgg requires at least PHP version 5.2, you can install it on 5.1.6 but some features may not work. Use at your own risk.",
-
-
-	'InstallationException:DatarootNotWritable' => "Your data directory %s is not writable.",
-	'InstallationException:DatarootUnderPath' => "Your data directory %s must be outside of your install path.",
-	'InstallationException:DatarootBlank' => "You have not specified a data directory.",
 
 	'SecurityException:authenticationfailed' => "User could not be authenticated",
 
@@ -570,6 +559,31 @@ To remove a widget drag it back to the <b>Widget gallery</b>.",
 	'usersettings:statistics:label:membersince' => "Member since",
 	'usersettings:statistics:label:lastlogin' => "Last logged in",
 
+/**
+ * Installation
+ */
+	'install:welcome' => 'Welcome',
+	'install:requirements' => 'Requirements check',
+	'install:database' => 'Database installation',
+	'install:settings' => 'Configure site',
+	'install:admin' => 'Create admin account',
+	'install:complete' => 'Finished',
+
+	'install:welcome:instructions' => "Elgg's installation is divided into 6 simple steps...
+
+2nd paragraph",
+
+	'install:require:php' => 'PHP check',
+	'install:require:enginedir' => 'Settings file check',
+	'install:require:htaccess' => 'Apache check',
+
+	'InstallationException:CantCreateSite' => "Unable to create a default ElggSite with credentials Name:%s, Url: %s",
+	'ConfigurationException:BadDatabaseVersion' => "The database backend you have installed doesn't meet the basic requirements to run Elgg. Please consult your documentation.",
+	'ConfigurationException:BadPHPVersion' => "You need at least PHP version 5.2 to run Elgg.",
+	'configurationwarning:phpversion' => "Elgg requires at least PHP version 5.2, you can install it on 5.1.6 but some features may not work. Use at your own risk.",
+	'InstallationException:DatarootNotWritable' => "Your data directory %s is not writable.",
+	'InstallationException:DatarootUnderPath' => "Your data directory %s must be outside of your install path.",
+	'InstallationException:DatarootBlank' => "You have not specified a data directory.",
 
 
 /**
@@ -606,6 +620,7 @@ To remove a widget drag it back to the <b>Widget gallery</b>.",
 	'post' => 'Post',
 	'submit' => 'Submit',
 	'site' => 'Site',
+	'refresh' => 'Refresh',
 
 	'up' => 'Up',
 	'down' => 'Down',

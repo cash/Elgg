@@ -6,11 +6,11 @@
  */
 
 if (isset($vars['failure']) && $vars['failure']) {
-	echo elgg_echo('install:database:error');
+	echo autop(elgg_echo('install:database:error'));
 	$vars['refresh'] = TRUE;
 	$vars['advance'] = FALSE;
 	echo elgg_view('install/nav', $vars);
 } else {
-	echo elgg_echo('install:database:instructions');
+	echo autop(elgg_echo('install:database:instructions'));
 	echo elgg_view('install/forms/database', $vars);
 }
