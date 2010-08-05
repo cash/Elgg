@@ -111,18 +111,18 @@ class ElggInstaller {
 	protected function requirements($vars) {
 
 		$report = array();
-
-		// attempt to create .htaccess file
-		$htaccessExists = $this->createHtaccess($report);
-
+		
+		// check PHP parameters and libraries
+		$this->checkPHP($report);
+		
 		// check for existence of settings file
 		if ($this->checkSettingsFile() != TRUE) {
 			// no file, so check permissions on engine directory
 			$this->checkEngineDir($report);
 		}
 		
-		// check PHP parameters and libraries
-		$this->checkPHP($report);
+		// attempt to create .htaccess file
+		$htaccessExists = $this->createHtaccess($report);
 
 		// check rewrite module
 		if ($htaccessExists) {
@@ -589,16 +589,6 @@ class ElggInstaller {
 	protected function createHtaccess(&$report) {
 		global $CONFIG;
 
-		if (!is_writable($CONFIG->path)) {
-			$report['htaccess'] = array(
-				array(
-					'severity' => 'failure',
-					'message' => elgg_echo('install:check:root'),
-				)
-			);
-			return FALSE;
-		}
-
 		$filename = "{$CONFIG->path}.htaccess";
 		if (file_exists($filename)) {
 			// check that this is the Elgg .htaccess
@@ -613,10 +603,21 @@ class ElggInstaller {
 						'message' => elgg_echo('install:check:htaccess_exists'),
 					)
 				);
+				return FALSE;
 			} else {
 				// Elgg .htaccess is already there
 				return TRUE;
 			}
+		}
+		
+		if (!is_writable($CONFIG->path)) {
+			$report['htaccess'] = array(
+				array(
+					'severity' => 'failure',
+					'message' => elgg_echo('install:check:root'),
+				)
+			);
+			return FALSE;
 		}
 
 		// create the .htaccess file

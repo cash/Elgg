@@ -574,8 +574,25 @@ To remove a widget drag it back to the <b>Widget gallery</b>.",
 2nd paragraph",
 
 	'install:require:php' => 'PHP check',
-	'install:require:enginedir' => 'Settings file check',
-	'install:require:htaccess' => 'Apache check',
+	'install:require:engine' => 'Settings file check',
+	'install:require:htaccess' => 'Web server check',
+
+	'install:check:root' => 'Your web server does not have permission to create an .htaccess file in the root directory of Elgg. You have two choices:
+
+		1. Change the permissions on the root directory
+		
+		2. Copy the file htaccess_dist to .htaccess',
+	'install:check:htaccess_exists' => 'There is an .htaccess file in the root directory of Elgg. Please remove it.',
+	'install:check:htaccess_fail' => 'Unable to create an .htaccess file in the root directory of Elgg. You will need to copy htaccess_dist to .htaccess',
+	'install:check:rewrite:success' => 'The test of the rewrite rules was successful.',
+
+	'install:check:enginedir' => 'Your web server does not have permission to create the settings.php file in the engine directory. You have two choices:
+
+		1. Change the permissions on the engine directory
+
+		2. Copy the file settings.example.php to settings.php and follow the instructions in it for setting your database parameters.',
+
+	'install:check:php:success' => "Your server's PHP satisfies all of Elgg's requirements.",
 
 	'InstallationException:CantCreateSite' => "Unable to create a default ElggSite with credentials Name:%s, Url: %s",
 	'ConfigurationException:BadDatabaseVersion' => "The database backend you have installed doesn't meet the basic requirements to run Elgg. Please consult your documentation.",

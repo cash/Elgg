@@ -14,7 +14,7 @@ foreach ($report as $category => $checks) {
 	echo "<ul>";
 	foreach ($checks as $check) {
 		echo "<li class=\"{$check['severity']}\">";
-		echo $check['message'];
+		echo autop($check['message']);
 		echo "</li>";
 	}
 	echo "</ul>";
