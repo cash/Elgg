@@ -31,12 +31,14 @@ header('Expires: Fri, 05 Feb 1982 00:00:00 -0500', TRUE);
 	</head>
 	<body>
 	<div id="elgg_wrapper">
-		<h1><?php echo $vars['title']; ?></h1>
-
+		<div id="elgg_header">
+			<?php echo elgg_view('install/header', $vars); ?>
+		</div>
 		<div id="elgg_sidebar">
 			<?php echo elgg_view('install/sidebar', $vars); ?>
 		</div>
 		<div id="elgg_content">
+			<h2><?php echo $vars['title']; ?></h2>
 			<?php echo elgg_view('messages/list', array('object' => $vars['sysmessages'])); ?>
 			<?php echo $vars['body']; ?>
 		</div>
