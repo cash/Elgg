@@ -115,8 +115,8 @@ class ElggInstaller {
 		// attempt to create .htaccess file
 		$htaccessExists = $this->createHtaccess($report);
 
-		// check permissions on engine directory
-		$this->checkEngineDir($report);
+		// check permissions on engine directory or existence of settings
+		$this->checkSettingsFile($report);
 		
 		// check PHP parameters and libraries
 		$this->checkPHP($report);
@@ -616,12 +616,16 @@ class ElggInstaller {
 	}
 
 	/**
-	 * Check that the engine is writable
+	 * Check that the settings file exists or engine dir is writable
 	 * @param array $report
 	 * @return bool
 	 */
-	protected function checkEngineDir(&$report) {
+	protected function checkSettingsFile(&$report) {
 		global $CONFIG;
+
+		if (file_exists("{$CONFIG->path}engine/settings.php")) {
+			return TRUE;
+		}
 
 		$writable = is_writable("{$CONFIG->path}engine");
 		if (!$writable) {
