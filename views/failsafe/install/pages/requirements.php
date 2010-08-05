@@ -1,4 +1,9 @@
 <?php
+/**
+ * Install requirements checking page
+ *
+ * @uses $vars['num_failures] Number of requirements failures
+ */
 
 echo elgg_echo('install:requirements:instructions');
 

@@ -1,4 +1,7 @@
 <?php
+/**
+ * Install database page
+ */
 
 echo elgg_echo('install:database:instructions');
 

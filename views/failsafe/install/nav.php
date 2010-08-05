@@ -2,10 +2,10 @@
 /**
  * Navigation for installation pages
  *
- * @uses $vars['url']
- * @uses $vars['next_step']
- * @uses $vars['refresh']
- * @uses $vars['advance']
+ * @uses $vars['url'] base url of site
+ * @uses $vars['next_step'] next step as string
+ * @uses $vars['refresh'] should refresh button be shown?
+ * @uses $vars['advance'] should the next button be active?
  */
 
 

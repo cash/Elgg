@@ -1,24 +1,12 @@
 <?php
+/**
+ * Database form
+ *
+ * @uses $vars['variables'] Array of form variables. See ElggInstaller.
+ */
 
-// @todo - make form sticky and add defaults
-
-$variables = $vars['variables'];
-
-$form_body = '';
-foreach ($variables as $field => $params) {
-	$label = elgg_echo("installation:database:label:$field");
-	$help = elgg_echo("installation:database:help:$field");
-	$params['internalname'] = $field;
-	
-	$form_body .= '<p>';
-	$form_body .= "<label>$label</label>";
-	$form_body .= elgg_view("input/{$params['type']}", $params);
-	$form_body .= "<span class=\"install_help\">$help</span>";
-	$form_body .= '</p>';
-}
-
-
-$form_body .= elgg_view('input/submit', array('value' => 'Next'));
+$vars['type'] = 'database';
+$form_body = elgg_view('install/forms/template', $vars);
 
 // @todo bug in current_page_url() with :8080 sites
 //$url = current_page_url();

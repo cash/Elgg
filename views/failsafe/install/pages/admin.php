@@ -1,4 +1,7 @@
 <?php
+/**
+ * Install create admin account page
+ */
 
 echo elgg_echo('install:admin:instructions');
 
