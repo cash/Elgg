@@ -185,6 +185,7 @@ class ElggInstaller {
 					break;
 				}
 
+				// check db version and connect 
 				if (!$this->connectToDatabase()) {
 					break;
 				}
@@ -900,7 +901,13 @@ class ElggInstaller {
 
 		setup_db_connections();
 
-		// @todo check MySQL version
+		// check MySQL version - must be 5.0 or >
+		$version = mysql_get_server_info();
+		$points = explode('.', $version);
+		if ($points[0] < 5) {
+			register_error("MySQL must be 5.0 or above. Your server is using $version.");
+			return FALSE;
+		}
 
 		return TRUE;
 	}
