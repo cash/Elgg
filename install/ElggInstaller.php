@@ -762,10 +762,9 @@ class ElggInstaller {
 	protected function checkRewriteModule(&$report) {
 		global $CONFIG;
 
-		$result = FALSE;
 		$url = "{$CONFIG->wwwroot}modrewrite.php";
 
-		if (function_exists('curl_init')) {
+		if (!function_exists('curl_init')) {
 			// try curl if installed
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, $url);
@@ -773,10 +772,18 @@ class ElggInstaller {
 			$response = curl_exec($ch);
 			curl_close($ch);
 			$result = $response === 'success';
-		} else if (!ini_get('allow_url_fopen')) {
+		} else if (ini_get('allow_url_fopen')) {
 			// use file_get_contents as fallback
 			$data = file_get_contents($url);
 			$result = $data === 'success';
+		} else {
+			$report['htaccess'] = array(
+				array(
+					'severity' => 'warning',
+					'message' => elgg_echo('install:check:rewrite:unknown'),
+				)
+			);
+			return FALSE;
 		}
 
 		if ($result) {
@@ -789,7 +796,7 @@ class ElggInstaller {
 		} else {
 			$report['htaccess'] = array(
 				array(
-					'severity' => 'warning',
+					'severity' => 'failure',
 					'message' => elgg_echo('install:check:rewrite:fail'),
 				)
 			);
