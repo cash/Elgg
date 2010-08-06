@@ -45,7 +45,7 @@ class ElggInstaller {
 	 */
 	public function run($step) {
 
-		// check of this a mod rewrite test coming in
+		// check if this a mod rewrite test coming in
 		$this->runModRewriteTest();
 
 		if (!in_array($step, $this->getSteps())) {
