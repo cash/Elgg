@@ -42,9 +42,9 @@ header('Expires: Fri, 05 Feb 1982 00:00:00 -0500', TRUE);
 			<?php echo elgg_view('messages/list', array('object' => $vars['sysmessages'])); ?>
 			<?php echo $vars['body']; ?>
 		</div>
-		<div id="elgg_footer">
-			<?php echo elgg_view('install/footer'); ?>
-		</div>
+	</div>
+	<div id="elgg_footer">
+		<?php echo elgg_view('install/footer'); ?>
 	</div>
 	</body>
 </html>

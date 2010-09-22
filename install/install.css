@@ -65,9 +65,9 @@ ul {
 #elgg_wrapper {
 	background: white;
 	width: 800px;
+	min-height: 400px;
 	margin: auto;
 	padding: 10px 40px;
-	margin-bottom: 40px;
 	margin-top: 20px;
 	border-right: 1px solid #666666;
 	border-bottom: 1px solid #666666;
@@ -84,20 +84,27 @@ ul {
 	width: 550px;
 }
 #elgg_footer {
-	width: 100%;
+	width: 800px;
 	height: 20px;
 	clear: both;
-	padding: 20px 20px 0 20px;
+	padding: 10px 20px 0 20px;
+	margin: auto;
+	margin-bottom: 40px;
 }
+
 .install_nav {
 	width: 100%;
 	text-align: right;
 }
 
+#elgg_footer a {
+	color: white;
+}
+
 #elgg_footer li {
 	float: left;
 	list-style: none;
-	margin-right: 10px;
+	margin-right: 20px;
 }
 
 #elgg_sidebar ol {
