@@ -22,7 +22,7 @@ $next_link = "{$vars['url']}install.php?step={$vars['next_step']}";
 $next = "<a href=\"$next_link\" disable=\"disable\">$next_text</a>";
 if (isset($vars['advance']) && !$vars['advance']) {
 	// disable the next button
-	$next = "<a class=\"disabled\">Next</a>";
+	$next = "<a class=\"disabled\">$next_text</a>";
 }
 
 

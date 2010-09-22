@@ -62,10 +62,16 @@ ul {
 	list-style: none;
 }
 
+.clearfloat {
+	clear:both;
+	height:0;
+	font-size: 1px;
+	line-height: 0px;
+}
+
 #elgg_wrapper {
 	background: white;
 	width: 800px;
-	min-height: 400px;
 	margin: auto;
 	padding: 10px 40px;
 	margin-top: 20px;
@@ -82,6 +88,8 @@ ul {
 #elgg_content {
 	float: left;
 	width: 550px;
+	min-height: 380px;
+	position: relative;
 }
 #elgg_footer {
 	width: 800px;
@@ -95,6 +103,8 @@ ul {
 .install_nav {
 	width: 100%;
 	text-align: right;
+	position: absolute;
+	bottom: 0px;
 }
 
 #elgg_footer a {
