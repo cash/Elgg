@@ -88,7 +88,8 @@ ul {
 #elgg_content {
 	float: left;
 	width: 550px;
-	min-height: 380px;
+	min-height: 320px;
+	padding-bottom: 60px;
 	position: relative;
 }
 #elgg_footer {
@@ -239,7 +240,7 @@ input[type="submit"]:hover {
 	padding: 5px;
 }
 
-.info {
+.pass {
 	border: 1px solid #00cc00;
 	background: #ccffcc;
 }
@@ -252,4 +253,9 @@ input[type="submit"]:hover {
 .failure {
 	border: 1px solid #D3322A;
 	background: #F7DAD8;
+}
+
+.info {
+	border: 1px solid #aaaaaa;
+	background: #ffffff;
 }

@@ -569,19 +569,32 @@ To remove a widget drag it back to the <b>Widget gallery</b>.",
 	'install:admin' => 'Create admin account',
 	'install:complete' => 'Finished',
 
-	'install:welcome:instructions' => "Elgg's installation is divided into 6 simple steps...
+	'install:welcome:instructions' => "Installing Elgg has 6 simple steps and reading this welcome is the first one!
 
-2nd paragraph",
+If you haven't already, read through the installation instructions included with Elgg (or click the instructions link at the bottom of the page).
 
-	'install:require:php' => 'PHP check',
-	'install:require:engine' => 'Settings file check',
-	'install:require:htaccess' => 'Web server check',
+If you are ready to proceed, click the Next button.",
+	'install:requirements:instructions:success' => "Your server passed the requirement checks.",
+	'install:requirements:instructions:failure' => "Your server failed the requirements check. After you have fixed the below issues, refresh this page.",
+	'install:requirements:instructions:warning' => "Your server passed the requirements check, but there is at least one warning. We recommend that you check the install troubleshooting page for more details.",
+
+	'install:require:php' => 'PHP',
+	'install:require:htaccess' => 'Web server',
+	'install:require:engine' => 'Settings file',
+	'install:require:database' => 'Database',
 
 	'install:check:root' => 'Your web server does not have permission to create an .htaccess file in the root directory of Elgg. You have two choices:
 
 		1. Change the permissions on the root directory
 		
 		2. Copy the file htaccess_dist to .htaccess',
+
+	'install:check:php:version' => 'Elgg requires PHP %s or above. This server is using version %s.',
+	'install:check:php:extension' => 'Elgg requires the PHP extension %s.',
+	'install:check:php:extension:recommend' => 'It is recommended that the PHP extension %s is installed.',
+	'install:check:php:open_basedir' => 'The open_basedir PHP directive may prevent Elgg from saving files to its data directory.',
+	'install:check:php:safe_mode' => 'Running PHP in safe mode is not recommened and may cause problems with Elgg.',
+
 	'install:check:htaccess_exists' => 'There is an .htaccess file in the root directory of Elgg. Please remove it.',
 	'install:check:htaccess_fail' => 'Unable to create an .htaccess file in the root directory of Elgg. You will need to copy htaccess_dist to .htaccess',
 	'install:check:rewrite:success' => 'The test of the rewrite rules was successful.',
@@ -593,6 +606,7 @@ To remove a widget drag it back to the <b>Widget gallery</b>.",
 		2. Copy the file settings.example.php to settings.php and follow the instructions in it for setting your database parameters.',
 
 	'install:check:php:success' => "Your server's PHP satisfies all of Elgg's requirements.",
+	'install:check:database' => 'The database requirements are checked when Elgg loads its database.',
 
 	'InstallationException:CantCreateSite' => "Unable to create a default ElggSite with credentials Name:%s, Url: %s",
 	'ConfigurationException:BadDatabaseVersion' => "The database backend you have installed doesn't meet the basic requirements to run Elgg. Please consult your documentation.",

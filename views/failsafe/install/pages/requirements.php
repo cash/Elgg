@@ -3,9 +3,18 @@
  * Install requirements checking page
  *
  * @uses $vars['num_failures] Number of requirements failures
+ * @uses $vars['num_warnings] Number of recommendation warnings
  */
 
-echo autop(elgg_echo('install:requirements:instructions'));
+if ($vars['num_failures'] != 0) {
+	$instruct_text = elgg_echo('install:requirements:instructions:failure');
+} elseif ($vars['num_warnings'] != 0) {
+	$instruct_text = elgg_echo('install:requirements:instructions:warning');
+} else {
+	$instruct_text = elgg_echo('install:requirements:instructions:success');
+}
+
+echo autop($instruct_text);
 
 $report = $vars['report'];
 foreach ($report as $category => $checks) {

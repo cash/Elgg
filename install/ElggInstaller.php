@@ -114,13 +114,8 @@ class ElggInstaller {
 		
 		// check PHP parameters and libraries
 		$this->checkPHP($report);
-		
-		// check for existence of settings file
-		if ($this->checkSettingsFile() != TRUE) {
-			// no file, so check permissions on engine directory
-			$this->checkEngineDir($report);
-		}
-		
+
+		// @todo - rewrite this to handle different web servers
 		// attempt to create .htaccess file
 		$htaccessExists = $this->createHtaccess($report);
 
@@ -128,13 +123,30 @@ class ElggInstaller {
 		if ($htaccessExists) {
 			$this->checkRewriteModule($report);
 		}
+		
+		// check for existence of settings file
+		if ($this->checkSettingsFile() != TRUE) {
+			// no file, so check permissions on engine directory
+			$this->checkEngineDir($report);
+		}
+
+		// check the database later
+		$report['database'] = array(array(
+			'severity' => 'info',
+			'message' => elgg_echo('install:check:database')
+		));
 
 		// any failures?
-		$numFailures = $this->countNumFailures($report);
+		$numFailures = $this->countNumConditions($report, 'failure');
+
+		// any warnings
+		$numWarnings = $this->countNumConditions($report, 'warning');
+
 
 		$params = array(
 			'report' => $report,
 			'num_failures' => $numFailures,
+			'num_warnings' => $numWarnings,
 		);
 
 		$this->render('requirements', $params);
@@ -677,10 +689,11 @@ class ElggInstaller {
 	protected function checkPHP(&$report) {
 		$phpReport = array();
 
-		if (version_compare(PHP_VERSION, '5.2.0', '<')) {
+		$elgg_php_version = '5.2.0';
+		if (version_compare(PHP_VERSION, $elgg_php_version, '<')) {
 			$phpReport[] = array(
 				'severity' => 'failure',
-				'message' => elgg_echo('install:check:php:version')
+				'message' => sprintf(elgg_echo('install:check:php:version'), $elgg_php_version, PHP_VERSION)
 			);
 		}
 
@@ -690,7 +703,7 @@ class ElggInstaller {
 
 		if (count($phpReport) == 0) {
 			$phpReport[] = array(
-				'severity' => 'info',
+				'severity' => 'pass',
 				'message' => elgg_echo('install:check:php:success')
 			);
 		}
@@ -715,20 +728,19 @@ class ElggInstaller {
 			if (!in_array($extension, $extensions)) {
 				$phpReport[] = array(
 					'severity' => 'failure',
-					'message' => elgg_echo("install:check:php:$extension")
+					'message' => sprintf(elgg_echo('install:check:php:extension'), $extension)
 				);
 			}
 		}
 
 		$recommendedExtensions = array(
 			'mbstring',
-			'curl',
 		);
 		foreach ($recommendedExtensions as $extension) {
 			if (!in_array($extension, $extensions)) {
 				$phpReport[] = array(
 					'severity' => 'warning',
-					'message' => elgg_echo("install:check:php:$extension")
+					'message' => sprintf(elgg_echo('install:check:php:extension:recommend'), $extension)
 				);
 			}
 		}
@@ -790,7 +802,7 @@ class ElggInstaller {
 		if ($result) {
 			$report['htaccess'] = array(
 				array(
-					'severity' => 'info',
+					'severity' => 'pass',
 					'message' => elgg_echo('install:check:rewrite:success'),
 				)
 			);
@@ -821,13 +833,14 @@ class ElggInstaller {
 	 * Count the number of failures in the requirements report
 	 *
 	 * @param array $report
+	 * @param string $condition 'failure' or 'warning'
 	 * @return int
 	 */
-	protected function countNumFailures($report) {
+	protected function countNumConditions($report, $condition) {
 		$count = 0;
 		foreach ($report as $category => $checks) {
 			foreach ($checks as $check) {
-				if ($check['severity'] === 'failure') {
+				if ($check['severity'] === $condition) {
 					$count++;
 				}
 			}
@@ -835,6 +848,7 @@ class ElggInstaller {
 
 		return $count;
 	}
+
 	
 	/**
 	 * Database support methods
