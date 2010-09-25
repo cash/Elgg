@@ -658,15 +658,6 @@ If you are ready to proceed, click the Next button.",
 
 	'install:complete:instructions' => 'Your Elgg site is now ready to be used. Click the button below to be taken to your site.',
 
-	'InstallationException:CantCreateSite' => "Unable to create a default ElggSite with credentials Name:%s, Url: %s",
-	'ConfigurationException:BadDatabaseVersion' => "The database backend you have installed doesn't meet the basic requirements to run Elgg. Please consult your documentation.",
-	'ConfigurationException:BadPHPVersion' => "You need at least PHP version 5.2 to run Elgg.",
-	'configurationwarning:phpversion' => "Elgg requires at least PHP version 5.2, you can install it on 5.1.6 but some features may not work. Use at your own risk.",
-	'InstallationException:DatarootNotWritable' => "Your data directory %s is not writable.",
-	'InstallationException:DatarootUnderPath' => "Your data directory %s must be outside of your install path.",
-	'InstallationException:DatarootBlank' => "You have not specified a data directory.",
-
-
 /**
  * Generic action words
  */
