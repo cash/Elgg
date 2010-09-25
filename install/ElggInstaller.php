@@ -865,7 +865,7 @@ class ElggInstaller {
 
 		foreach ($formVars as $field => $info) {
 			if ($info['required'] == TRUE && !$submissionVars[$field]) {
-				$name = elgg_echo("install:$field");
+				$name = elgg_echo("installation:database:label:$field");
 				register_error("$name is required");
 				return FALSE;
 			}
@@ -1005,7 +1005,7 @@ class ElggInstaller {
 
 		foreach ($formVars as $field => $info) {
 			if ($info['required'] == TRUE && !$submissionVars[$field]) {
-				$name = elgg_echo("install:$field");
+				$name = elgg_echo("installation:settings:label:$field");
 				register_error("$name is required");
 				return FALSE;
 			}
@@ -1118,7 +1118,7 @@ class ElggInstaller {
 		
 		foreach ($formVars as $field => $info) {
 			if ($info['required'] == TRUE && !$submissionVars[$field]) {
-				$name = elgg_echo("install:$field");
+				$name = elgg_echo("installation:admin:label:$field");
 				register_error("$name is required");
 				return FALSE;
 			}

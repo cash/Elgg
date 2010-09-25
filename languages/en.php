@@ -608,6 +608,56 @@ If you are ready to proceed, click the Next button.",
 	'install:check:php:success' => "Your server's PHP satisfies all of Elgg's requirements.",
 	'install:check:database' => 'The database requirements are checked when Elgg loads its database.',
 
+	'install:database:instructions' => "If you haven't already created a database for Elgg, do that now. Then fill in the values below to initialize the Elgg database.",
+
+	'installation:database:label:dbuser' =>  'Database Username',
+	'installation:database:label:dbpassword' => 'Database Password',
+	'installation:database:label:dbname' => 'Database Name',
+	'installation:database:label:dbhost' => 'Database Host',
+	'installation:database:label:dbprefix' => 'Database Table Prefix',
+
+	'installation:database:help:dbuser' => 'User that has full priviledges to the MySQL database that you created for Elgg',
+	'installation:database:help:dbpassword' => 'Password for the above database user account',
+	'installation:database:help:dbname' => 'Name of the Elgg database',
+	'installation:database:help:dbhost' => 'Hostname of the MySQL server (usually localhost)',
+	'installation:database:help:dbprefix' => "The prefix given to all of Elgg's tables (usually elgg_)",
+
+	'install:dbuser' => '',
+
+	'install:settings:instructions' => "We need some information about the site as we configure Elgg. If you haven't created a data directory for Elgg, please do so before completing this step.",
+
+	'installation:settings:label:sitename' => 'Site Name',
+	'installation:settings:label:siteemail' => 'Site Email Address',
+	'installation:settings:label:wwwroot' => 'Site URL',
+	'installation:settings:label:path' => 'Elgg Install Directory',
+	'installation:settings:label:dataroot' => 'Data Directory',
+	'installation:settings:label:language' => 'Site Language',
+	'installation:settings:label:siteaccess' => 'Default Site Access',
+
+	'installation:settings:help:sitename' => 'The name of your new Elgg site',
+	'installation:settings:help:siteemail' => 'Email address used by Elgg for communication with users',
+	'installation:settings:help:wwwroot' => 'The address of the site (Elgg usually guesses this correctly)',
+	'installation:settings:help:path' => 'The directory where you put the Elgg code (Elgg usually guesses this correctly)',
+	'installation:settings:help:dataroot' => 'The directory that you created for Elgg to save files (the permissions on this directory are checked when you click Next)',
+	'installation:settings:help:language' => 'The default language for the site',
+	'installation:settings:help:siteaccess' => 'The default access level for new user created content',
+
+	'install:admin:instructions' => "It is now time to create an administrator's account.",
+
+	'installation:admin:label:displayname' => 'Display Name',
+	'installation:admin:label:email' => 'Email Address',
+	'installation:admin:label:username' => 'Username',
+	'installation:admin:label:password1' => 'Password',
+	'installation:admin:label:password2' => 'Password Again',
+
+	'installation:admin:help:displayname' => 'The name that is displayed on the site for this account',
+	'installation:admin:help:email' => '',
+	'installation:admin:help:username' => 'Account username used for logging in',
+	'installation:admin:help:password1' => 'Account password must be at least x characters long',
+	'installation:admin:help:password2' => 'Retype password to confirm',
+
+	'install:complete:instructions' => 'Your Elgg site is now ready to be used. Click the button below to be taken to your site.',
+
 	'InstallationException:CantCreateSite' => "Unable to create a default ElggSite with credentials Name:%s, Url: %s",
 	'ConfigurationException:BadDatabaseVersion' => "The database backend you have installed doesn't meet the basic requirements to run Elgg. Please consult your documentation.",
 	'ConfigurationException:BadPHPVersion' => "You need at least PHP version 5.2 to run Elgg.",
