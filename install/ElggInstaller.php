@@ -20,6 +20,12 @@ class ElggInstaller {
 		'complete',
 		);
 
+	protected $status = array(
+		'database' => FALSE,
+		'settings' => FALSE,
+		'admin' => FALSE,
+	);
+
 	protected $isAction;
 
 	/**
@@ -52,13 +58,14 @@ class ElggInstaller {
 			throw new InstallationException("$step is an unknown installation step.");
 		}
 
-		$this->finishBootstraping($step);
+		$this->setInstallStatus();
+
+		$this->checkInstallCompletion($step);
 
 		// check if this is an install being resumed
-		$newStep = $this->resumeInstall($step);
-		if ($newStep) {
-			$step = $newStep;
-		}
+		$this->resumeInstall($step);
+
+		$this->finishBootstraping($step);
 
 		$params = $this->getPostVariables();
 		$this->$step($params);
@@ -421,6 +428,83 @@ class ElggInstaller {
 	}
 
 	/**
+	 * Check the different nstall steps for completion
+	 */
+	protected function setInstallStatus() {
+		global $CONFIG;
+		
+		$settingsCreated = $this->checkSettingsFile();
+		if ($settingsCreated == FALSE) {
+			return;
+		}
+
+		$this->loadSettingsFile();
+		
+		// must be able to connect to database to jump install steps
+		$dbSettingsPass = $this->checkDatabaseSettings(
+				$CONFIG->dbuser,
+				$CONFIG->dbpass,
+				$CONFIG->dbname,
+				$CONFIG->dbhost
+				);
+		if ($dbSettingsPass == FALSE) {
+			return;
+		}
+
+		if (!include_once("{$CONFIG->path}engine/lib/database.php")) {
+			throw new InstallationException("Could not load database.php");
+		}
+
+		// check that the config table has been created
+		$query = "show tables";
+		$result = get_data($query);
+		if ($result) {
+			foreach ($result as $table) {
+				$table = (array) $table;
+				if (in_array("{$CONFIG->dbprefix}config", $table)) {
+					$this->status['database'] = TRUE;
+				}
+			}
+			if ($this->status['database'] == FALSE) {
+				return;
+			}
+		}
+
+		// check that the config table has entries
+		$query = "SELECT COUNT(*) AS total FROM {$CONFIG->dbprefix}config";
+		$result = get_data($query);
+		if ($result && $result[0]->total > 0) {
+			$this->status['settings'] = TRUE;
+		} else {
+			return;
+		}
+
+		// check that the users entity table has an entry
+		$query = "SELECT COUNT(*) AS total FROM {$CONFIG->dbprefix}users_entity";
+		$result = get_data($query);
+		if ($result && $result[0]->total > 0) {
+			$this->status['admin'] = TRUE;
+		} else {
+			return;
+		}
+	}
+
+	/**
+	 * Security check to ensure the installer cannot be run after installation
+	 * has finished. If this is detected, the viewer is sent to the front page.
+	 *
+	 * @param string $step
+	 */
+	protected function checkInstallCompletion($step) {
+		if ($step != 'complete') {
+			if (!in_array(FALSE, $this->status)) {
+				// install complete but someone is trying to view an install page
+				forward();
+			}
+		}
+	}
+
+	/**
 	 * Check if this is a case of a install being resumed and figure
 	 * out where to continue from. Returns the best guess on the step.
 	 *
@@ -428,14 +512,27 @@ class ElggInstaller {
 	 * @return string
 	 */
 	protected function resumeInstall($step) {
-		// does settings exist
+		global $CONFIG;
 
-		// is database initialized
+		// only do a resume from the first step
+		if ($step !== 'welcome') {
+			return;
+		}
 
-		// are site settings set
+		if ($this->status['database'] == FALSE) {
+			return;
+		}
 
-		// is admin account created
-		// error page that install is finished
+		if ($this->status['settings'] == FALSE) {
+			forward("{$CONFIG->wwwroot}install.php?step=settings");
+		}
+
+		if ($this->status['admin'] == FALSE) {
+			forward("{$CONFIG->wwwroot}install.php?step=admin");
+		}
+
+		// everything appears to be set up
+		forward("{$CONFIG->wwwroot}install.php?step=complete");
 	}
 
 	/**
@@ -486,9 +583,7 @@ class ElggInstaller {
 			global $CONFIG;
 			$lib_dir = $CONFIG->path . 'engine/lib/';
 
-			if (!include_once("{$CONFIG->path}engine/settings.php")) {
-				throw new InstallationException("Elgg could not load the settings file.");
-			}
+			$this->loadSettingsFile();
 			
 			$lib_files = array(
 				// these want to be loaded first apparently?
@@ -554,6 +649,14 @@ class ElggInstaller {
 
 		$url = "$protocol://{$_SERVER['SERVER_NAME']}$port{$uri}";
 		return $url;
+	}
+
+	function loadSettingsFile() {
+		global $CONFIG;
+		
+		if (!include_once("{$CONFIG->path}engine/settings.php")) {
+			throw new InstallationException("Elgg could not load the settings file. It does not exist or there is a permissions issue.");
+		}
 	}
 
 	/**

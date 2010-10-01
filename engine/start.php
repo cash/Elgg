@@ -84,7 +84,8 @@ foreach ($lib_files as $file) {
 	}
 }
 
-// check if the install was completed - move into function
+// check if the install was completed
+// @todo move into function
 $installed = FALSE;
 try {
 	$installed = is_installed();
