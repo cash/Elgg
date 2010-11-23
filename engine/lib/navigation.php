@@ -7,6 +7,182 @@
  * @subpackage Navigation
  */
 
+
+/**
+ * Register an item for an Elgg menu
+ *
+ * @param string       $menu_name The name of the menu: site, page, userhover,
+ *                                userprofile, groupprofile, or any custom menu
+ * @param ElggMenuItem $menu_item A menu object
+ *
+ * @return void
+ * @since 1.8.0
+ */
+function elgg_register_menu_item($menu_name, $menu_item) {
+	global $CONFIG;
+
+	if (!isset($CONFIG->menus[$menu_name])) {
+		$CONFIG->menus[$menu_name] = array();
+	}
+
+	$CONFIG->menus[$menu_name][] = $menu_item;
+}
+
+/**
+ * Remove an item from a menu
+ *
+ * @param string $menu_name The name of the menu
+ * @param string $id The unique identifier for this menu item
+ *
+ * @return bool
+ * @since 1.8.0
+ */
+function elgg_unregister_menu_item($menu_name, $id) {
+	global $CONFIG;
+
+	if (!isset($CONFIG->menus[$menu_name])) {
+		return false;
+	}
+
+	foreach ($CONFIG->menus[$menu_name] as $index => $menu_object) {
+		if ($menu_object->id == $id) {
+			unset($CONFIG->menus[$menu_name][$index]);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Render a menu
+ *
+ * @param string $menu_name The name of the menu
+ * @param array $vars An associative array of display options for the menu
+ *
+ * @return string
+ * @since 1.8.0
+ */
+function elgg_view_menu($menu_name, array $vars = array()) {
+    $vars['name'] = $menu_name;
+
+    // give plugins a chance to add menu items just before creation
+	// supports context sensitive menus (ex. user hover)
+    trigger_plugin_hook('register', "menu:$menu_name", $vars, NULL);
+
+    // sort menu and determine selected item
+	$menu = elgg_menu_prepare($menu_name);
+    $menu = trigger_plugin_hook('prepare', 'menu', $vars, $menu);
+
+	$vars['menu'] = $menu;
+
+    if (elgg_view_exists("navigation/menu/$menu_name")) {
+        return elgg_view("navigation/menu/$menu_name", $vars);
+    } else {
+        return elgg_view("navigation/menu/default", $vars);
+    }
+}
+
+/**
+ * Default menu preparation
+ *
+ * Internal Elgg function
+ *
+ * @param string $menu_name
+ *
+ * @return array
+ * @since 1.8.0
+ */
+function elgg_menu_prepare($menu_name) {
+	global $CONFIG;
+
+	if (!isset($CONFIG->menus[$menu_name])) {
+		return array();
+	}
+
+	// get menu items for this context
+	$menu = array();
+	foreach ($CONFIG->menus[$menu_name] as $menu_item) {
+		if ($menu_item->inContext()) {
+			$menu[] = $menu_item;
+		}
+	}
+
+	$menu = elgg_menu_find_selected($menu);
+
+	$menu = elgg_menu_setup_sections($menu);
+
+	$menu = elgg_menu_setup_trees($menu);
+
+	$menu = elgg_menu_sort($menu);
+
+	return $menu;
+}
+
+function elgg_menu_find_selected($menu) {
+	return $menu;
+}
+
+/**
+ * Group the menu items into sections
+ *
+ * Internal Elgg function
+ *
+ * @param array $menu
+ *
+ * @return array
+ * @since 1.8.0
+ */
+function elgg_menu_setup_sections($menu) {
+	$sectioned_menu = array();
+	foreach ($menu as $menu_item) {
+		if (!isset($sectioned_menu[$menu_item->getSection()])) {
+			$sectioned_menu[$menu_item->getSection()] = array();
+		}
+		$sectioned_menu[$menu_item->getSection()] = $menu_item;
+	}
+
+	return $sectioned_menu;
+}
+
+function elgg_menu_setup_trees($menu) {
+	$menu_tree = array();
+
+	foreach ($menu as $key => $section) {
+		$parents = array();
+		$children = array();
+		// divide base nodes from children
+		foreach ($section as $menu_item) {
+			if (!$menu_item->getParentID()) {
+				$parents[$menu_item->getID()] = $menu_item;
+			} else {
+				$children[$menu_item->getParentID()] = $menu_item;
+			}
+		}
+
+		// attach children to parents
+		$iteration = 0;
+		$current_gen = $parents;
+		while (count($children) && $iteration < 5) {
+			foreach ($children as $parent_id => $menu_item) {
+				if (array_key_exists($parent_id, $current_gen)) {
+					$next_gen[$menu_item->getID()] = $menu_item;
+					$current_gen[$parent_id]->addChild($menu_item);
+				}
+			}
+			$current_gen = $next_gen;
+		}
+
+		$menu_tree[$key] = $parents;
+	}
+
+	return $menu_tree;
+}
+
+function elgg_menu_sort($menu) {
+	return $menu;
+}
+
 /**
  * Deprecated by elgg_add_submenu_item()
  *
@@ -504,3 +680,11 @@ function elgg_get_breadcrumbs() {
 
 	return (is_array($CONFIG->breadcrumbs)) ? $CONFIG->breadcrumbs : array();
 }
+
+function elgg_navigation_init() {
+	global $CONFIG;
+
+	$CONFIG->menus = array();
+}
+
+elgg_register_event_handler('init', 'system', 'elgg_navigation_init');
