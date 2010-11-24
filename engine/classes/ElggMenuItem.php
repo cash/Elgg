@@ -47,7 +47,15 @@ class ElggMenuItem {
 	 * @var string Identifier of this item's parent
 	 */
 	 protected $parent_id = '';
-	 
+
+	 /**
+	  * @var ElggMenuItem The parent object or null
+	  */
+	 protected $parent = null;
+
+	 /**
+	  * @var array Array of children objects or empty array
+	  */
 	 protected $children = array();
 
 	/**
@@ -218,9 +226,44 @@ class ElggMenuItem {
 		return $this->parent_id;
 	}
 
-	
+	/**
+	 * Set the parent menu item
+	 *
+	 * @param ElggMenuItem $parent
+	 *
+	 * @return void
+	 */
+	public function setParent($parent) {
+		$this->parent = $parent;
+	}
+
+	/**
+	 * Get the parent menu item
+	 *
+	 * @return ElggMenuItem or null
+	 */
+	public function getParent() {
+		return $this->parent;
+	}
+
+	/**
+	 * Add a child menu item
+	 *
+	 * @param ElggMenuItem $item
+	 *
+	 * @return void
+	 */
 	public function addChild($item) {
 		$this->children[] = $item;
+	}
+
+	/**
+	 * Get the children menu items
+	 *
+	 * @return array
+	 */
+	public function getChildren() {
+		return $this->children;
 	}
 
 	/**

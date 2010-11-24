@@ -68,11 +68,11 @@ function elgg_view_menu($menu_name, array $vars = array()) {
 
     // give plugins a chance to add menu items just before creation
 	// supports context sensitive menus (ex. user hover)
-    trigger_plugin_hook('register', "menu:$menu_name", $vars, NULL);
+    elgg_trigger_plugin_hook('register', "menu:$menu_name", $vars, NULL);
 
     // sort menu and determine selected item
 	$menu = elgg_menu_prepare($menu_name);
-    $menu = trigger_plugin_hook('prepare', 'menu', $vars, $menu);
+    $menu = elgg_trigger_plugin_hook('prepare', 'menu', $vars, $menu);
 
 	$vars['menu'] = $menu;
 
@@ -139,12 +139,23 @@ function elgg_menu_setup_sections($menu) {
 		if (!isset($sectioned_menu[$menu_item->getSection()])) {
 			$sectioned_menu[$menu_item->getSection()] = array();
 		}
-		$sectioned_menu[$menu_item->getSection()] = $menu_item;
+		$sectioned_menu[$menu_item->getSection()][] = $menu_item;
 	}
 
 	return $sectioned_menu;
 }
 
+/**
+ * Create trees for each menu section
+ *
+ * Internal Elgg function
+ *
+ * @internal The tree is doubly linked (parent and children links)
+ *
+ * @param array $menu A menu array obtained from elgg_menu_setup_sections()
+ *
+ * @return array
+ */
 function elgg_menu_setup_trees($menu) {
 	$menu_tree = array();
 
@@ -153,10 +164,11 @@ function elgg_menu_setup_trees($menu) {
 		$children = array();
 		// divide base nodes from children
 		foreach ($section as $menu_item) {
-			if (!$menu_item->getParentID()) {
+			$parent_id = $menu_item->getParentID();
+			if (!$parent_id) {
 				$parents[$menu_item->getID()] = $menu_item;
 			} else {
-				$children[$menu_item->getParentID()] = $menu_item;
+				$children[] = $menu_item;
 			}
 		}
 
@@ -164,17 +176,25 @@ function elgg_menu_setup_trees($menu) {
 		$iteration = 0;
 		$current_gen = $parents;
 		while (count($children) && $iteration < 5) {
-			foreach ($children as $parent_id => $menu_item) {
+			foreach ($children as $index => $menu_item) {
+				$parent_id = $menu_item->getParentID();
 				if (array_key_exists($parent_id, $current_gen)) {
 					$next_gen[$menu_item->getID()] = $menu_item;
 					$current_gen[$parent_id]->addChild($menu_item);
+					$menu_item->setParent($current_gen[$parent_id]);
+					unset($children[$index]);
 				}
 			}
 			$current_gen = $next_gen;
+			$iteration += 1;
 		}
 
+		// convert keys to indexes for first level of tree
+		$parents = array_values($parents);
+		
 		$menu_tree[$key] = $parents;
 	}
+
 
 	return $menu_tree;
 }
@@ -681,10 +701,19 @@ function elgg_get_breadcrumbs() {
 	return (is_array($CONFIG->breadcrumbs)) ? $CONFIG->breadcrumbs : array();
 }
 
+function elgg_navigation_tests($hook, $type, $value, $params) {
+	global $CONFIG;
+	$value = array();
+	$value[] = $CONFIG->path . 'engine/tests/api/navigation.php';
+	return $value;
+}
+
 function elgg_navigation_init() {
 	global $CONFIG;
 
 	$CONFIG->menus = array();
+
+	elgg_register_plugin_hook_handler('unit_test', 'system', 'elgg_navigation_tests');
 }
 
 elgg_register_event_handler('init', 'system', 'elgg_navigation_init');
