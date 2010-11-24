@@ -267,6 +267,17 @@ class ElggMenuItem {
 	}
 
 	/**
+	 * Sort the children
+	 *
+	 * @param string $sort_function
+	 *
+	 * @return void
+	 */
+	public function sortChildren($sort_function) {
+		usort($this->children, $sort_function);
+	}
+
+	/**
 	 * Get the menu link
 	 *
 	 * @todo add styling

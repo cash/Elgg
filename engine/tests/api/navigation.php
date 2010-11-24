@@ -117,7 +117,33 @@ class ElggCoreNavigationTest extends ElggCoreUnitTest {
 	 * Test elgg_menu_setup_sort
 	 */
 	public function testMenuSort() {
+		//   1->3,2  2->5,4
 
+		$this->items[1]->addChild($this->items[3]);
+		$this->items[3]->setParent($this->items[1]);
+		$this->items[1]->addChild($this->items[2]);
+		$this->items[2]->setParent($this->items[1]);
+
+		$this->items[3]->addChild($this->items[5]);
+		$this->items[5]->setParent($this->items[3]);
+		$this->items[3]->addChild($this->items[4]);
+		$this->items[4]->setParent($this->items[3]);
+
+		$grouped_menu = array();
+		$grouped_menu['default'] = array($this->items[1]);
+
+		$sorted = elgg_menu_sort($grouped_menu);
+
+		$root = $sorted['default'][0];
+		$this->assertEqual($root->getID(), 'menu1');
+
+		$children = $root->getChildren();
+		$this->assertEqual($children[0]->getID(), 'menu2');
+		$this->assertEqual($children[1]->getID(), 'menu3');
+
+		$children = $children[1]->getChildren();
+		$this->assertEqual($children[0]->getID(), 'menu4');
+		$this->assertEqual($children[1]->getID(), 'menu5');
 	}
 
 }

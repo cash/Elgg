@@ -64,14 +64,23 @@ function elgg_unregister_menu_item($menu_name, $id) {
  * @since 1.8.0
  */
 function elgg_view_menu($menu_name, array $vars = array()) {
-    $vars['name'] = $menu_name;
+	global $CONFIG;
+	
+	$vars['name'] = $menu_name;
 
     // give plugins a chance to add menu items just before creation
 	// supports context sensitive menus (ex. user hover)
     elgg_trigger_plugin_hook('register', "menu:$menu_name", $vars, NULL);
 
-    // sort menu and determine selected item
-	$menu = elgg_menu_prepare($menu_name);
+    // prepare the menu for display
+	$menu = $CONFIG->menus[$menu_name];
+	$menu = elgg_menu_select_from_context($menu);
+	$vars['selected_item'] = elgg_menu_find_selected($menu);
+	$menu = elgg_menu_setup_sections($menu);
+	$menu = elgg_menu_setup_trees($menu);
+	$menu = elgg_menu_sort($menu);
+
+	// let plugins modify the menu
     $menu = elgg_trigger_plugin_hook('prepare', 'menu', $vars, $menu);
 
 	$vars['menu'] = $menu;
@@ -84,43 +93,61 @@ function elgg_view_menu($menu_name, array $vars = array()) {
 }
 
 /**
- * Default menu preparation
+ * Selects the menu items for the current context
  *
  * Internal Elgg function
  *
- * @param string $menu_name
+ * @param array $menu Flat array of menu items
  *
  * @return array
  * @since 1.8.0
  */
-function elgg_menu_prepare($menu_name) {
-	global $CONFIG;
-
-	if (!isset($CONFIG->menus[$menu_name])) {
+function elgg_menu_select_from_context($menu) {
+	if (!isset($menu)) {
 		return array();
 	}
 
 	// get menu items for this context
-	$menu = array();
-	foreach ($CONFIG->menus[$menu_name] as $menu_item) {
+	$selected_menu = array();
+	foreach ($menu as $menu_item) {
 		if ($menu_item->inContext()) {
-			$menu[] = $menu_item;
+			$selected_menu[] = $menu_item;
 		}
 	}
 
-	$menu = elgg_menu_find_selected($menu);
-
-	$menu = elgg_menu_setup_sections($menu);
-
-	$menu = elgg_menu_setup_trees($menu);
-
-	$menu = elgg_menu_sort($menu);
-
-	return $menu;
+	return $selected_menu;
 }
 
+/**
+ * Find the menu item that is currently selected 
+ *
+ * Internal Elgg function
+ *
+ * @param array $menu Flat array of menu items
+ *
+ * @return ElggMenuItem
+ * @since 1.8.0
+ */
 function elgg_menu_find_selected($menu) {
-	return $menu;
+	
+	// do we have a selected menu item already
+	foreach ($menu as $menu_item) {
+		if ($menu_item->getSelected()) {
+			return $menu_item;
+		}
+	}
+
+	// scan looking for a selected item
+	foreach ($menu as $menu_item) {
+		if ($menu_item->getURL()) {
+			if (elgg_http_url_is_identical(full_url(), $menu_item->getURL())) {
+				$menu_item->setSelected(true);
+				return $menu_item;
+			}
+		}
+	}
+
+	return null;
 }
 
 /**
@@ -128,9 +155,9 @@ function elgg_menu_find_selected($menu) {
  *
  * Internal Elgg function
  *
- * @param array $menu
+ * @param array $menu Flat array of menu items
  *
- * @return array
+ * @return array 
  * @since 1.8.0
  */
 function elgg_menu_setup_sections($menu) {
@@ -155,6 +182,7 @@ function elgg_menu_setup_sections($menu) {
  * @param array $menu A menu array obtained from elgg_menu_setup_sections()
  *
  * @return array
+ * @since 1.8.0
  */
 function elgg_menu_setup_trees($menu) {
 	$menu_tree = array();
@@ -199,8 +227,59 @@ function elgg_menu_setup_trees($menu) {
 	return $menu_tree;
 }
 
-function elgg_menu_sort($menu) {
-	return $menu;
+/**
+ *
+ * Elgg Internal function
+ * 
+ * @param ElggMenuItem $a
+ * @param ElggMenuItem $b
+ * 
+ * @return bool
+ * @since 1.8.0
+ */
+function elgg_menu_item_cmp($a, $b) {
+	$a = $a->getID();
+	$b = $b->getID();
+
+	return strnatcmp($a, $b);
+}
+
+/**
+ * Default sort of the menu based on section and id
+ *
+ * Internal Elgg function
+ *
+ * @param array  $menu          Tree of menu items
+ * @param string $sort_function Function name
+ *
+ * @return array
+ * @since 1.8.0
+ */
+function elgg_menu_sort($menu_tree, $sort_function = 'elgg_menu_item_cmp') {
+
+	ksort($menu_tree);
+
+	foreach ($menu_tree as $index => $section) {
+		usort($section, $sort_function);
+		$menu_tree[$index] = $section;
+
+		// depth first traversal of trees
+		foreach ($section as $root) {
+			$stack = array();
+			array_push($stack, $root);
+			while (!empty($stack)) {
+				$node = array_pop($stack);
+				$node->sortChildren($sort_function);
+				$children = $node->getChildren();
+				if ($children) {
+					$stack = array_merge($stack, $children);
+				}
+				$p = count($stack);
+			}
+		}
+	}
+
+	return $menu_tree;
 }
 
 /**
