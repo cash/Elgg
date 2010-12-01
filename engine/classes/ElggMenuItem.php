@@ -11,7 +11,7 @@ class ElggMenuItem {
 	/**
 	 * @var string Identifier of the menu
 	 */
-	protected $id;
+	protected $name;
 
 	/**
 	 * @var string The menu display string
@@ -46,7 +46,7 @@ class ElggMenuItem {
 	/**
 	 * @var string Identifier of this item's parent
 	 */
-	 protected $parent_id = '';
+	 protected $parent_name = '';
 
 	 /**
 	  * @var ElggMenuItem The parent object or null
@@ -61,12 +61,12 @@ class ElggMenuItem {
 	/**
 	 * ElggMenuItem constructor
 	 *
-	 * @param string $id
-	 * @param string $title
-	 * @param string $url
+	 * @param string $name  Identifier of the menu item
+	 * @param string $title Title of the menu item
+	 * @param string $url   URL of the menu item
 	 */
-	public function __construct($id, $title, $url) {
-		$this->id = $id;
+	public function __construct($name, $title, $url) {
+		$this->name = $name;
 		$this->title = $title;
 		$this->url = $url;
 	}
@@ -75,18 +75,18 @@ class ElggMenuItem {
 	 * ElggMenuItem factory method
 	 *
 	 * This static method creates an ElggMenuItem from an associative array.
-	 * Required keys are id, title, and url.
+	 * Required keys are name, title, and url.
 	 *
 	 * @param array $options Option array of key value pairs
 	 *
 	 * @return ElggMenuItem or NULL on error
 	 */
 	public static function factory($options) {
-		if (!isset($options['id']) || !isset($options['title']) || !isset($options['url'])) {
+		if (!isset($options['name']) || !isset($options['title']) || !isset($options['url'])) {
 			return NULL;
 		}
 		
-		$item = new ElggMenuItem($options['id'], $options['title'], $options['url']);
+		$item = new ElggMenuItem($options['name'], $options['title'], $options['url']);
 
 		// special catch in case someone uses context rather than contexts
 		if (isset($options['context'])) {
@@ -111,8 +111,8 @@ class ElggMenuItem {
 	 *
 	 * @return string
 	 */
-	public function getID() {
-		return $this->id;
+	public function getName() {
+		return $this->name;
 	}
 
 	/**
@@ -244,12 +244,12 @@ class ElggMenuItem {
 	/**
 	 * Set the parent identifier
 	 *
-	 * @param string $parent_id The identifier of the parent ElggMenuItem
+	 * @param string $parent_name The identifier of the parent ElggMenuItem
 	 *
 	 * @return void
 	 */
-	public function setParentID($parent_id) {
-		$this->parent_id = $parent_id;
+	public function setParentName($parent_name) {
+		$this->parent_name = $parent_name;
 	}
 
 	/**
@@ -257,8 +257,8 @@ class ElggMenuItem {
 	 *
 	 * @return string
 	 */
-	public function getParentID() {
-		return $this->parent_id;
+	public function getParentName() {
+		return $this->parent_name;
 	}
 
 	/**

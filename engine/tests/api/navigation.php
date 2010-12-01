@@ -61,20 +61,13 @@ class ElggCoreNavigationTest extends ElggCoreUnitTest {
 		$menu = elgg_menu_setup_sections($this->items);
 
 		foreach ($menu['s1'] as $item) {
-			$id = (int)substr($item->getID(), strlen("menu"));
+			$id = (int)substr($item->getName(), strlen("menu"));
 			$this->assertTrue(in_array($id, $s1));
 		}
 		foreach ($menu['s2'] as $item) {
-			$id = (int)substr($item->getID(), strlen("menu"));
+			$id = (int)substr($item->getName(), strlen("menu"));
 			$this->assertTrue(in_array($id, $s2));
 		}
-	}
-
-	/**
-	 * Test elgg_menu_find_selected()
-	 */
-	public function testMenuFindSelected() {
-
 	}
 
 	/**
@@ -84,9 +77,9 @@ class ElggCoreNavigationTest extends ElggCoreUnitTest {
 		//   1->3,4->5
 		//   2
 
-		$this->items[3]->setParentID("menu1");
-		$this->items[4]->setParentID("menu1");
-		$this->items[5]->setParentID("menu3");
+		$this->items[3]->setParentName("menu1");
+		$this->items[4]->setParentName("menu1");
+		$this->items[5]->setParentName("menu3");
 
 		$grouped_menu = array();
 		$grouped_menu['default'] = $this->items;
@@ -96,18 +89,18 @@ class ElggCoreNavigationTest extends ElggCoreUnitTest {
 		$children = $menu['default'][0]->getChildren();
 		$this->assertEqual(2, count($children));
 		if (isset($children[0])) {
-			$this->assertEqual("menu3", $children[0]->getID());
+			$this->assertEqual("menu3", $children[0]->getName());
 			$parent = $children[0]->getParent();
-			$this->assertEqual("menu1", $children[0]->getParent()->getID());
+			$this->assertEqual("menu1", $children[0]->getParent()->getName());
 			$third_gen = $children[0]->getChildren();
 			if (isset($third_gen[0])) {
-				$this->assertEqual("menu5", $third_gen[0]->getID());
-				$this->assertEqual("menu3", $third_gen[0]->getParent()->getID());
+				$this->assertEqual("menu5", $third_gen[0]->getName());
+				$this->assertEqual("menu3", $third_gen[0]->getParent()->getName());
 			}
 		}
 		if (isset($children[1])) {
-			$this->assertEqual("menu4", $children[1]->getID());
-			$this->assertEqual("menu1", $children[1]->getParent()->getID());
+			$this->assertEqual("menu4", $children[1]->getName());
+			$this->assertEqual("menu1", $children[1]->getParent()->getName());
 		}
 		$this->assertEqual(0, count($menu['default'][1]->getChildren()));
 		$this->assertNull($menu['default'][1]->getParent());
@@ -135,15 +128,15 @@ class ElggCoreNavigationTest extends ElggCoreUnitTest {
 		$sorted = elgg_menu_sort($grouped_menu);
 
 		$root = $sorted['default'][0];
-		$this->assertEqual($root->getID(), 'menu1');
+		$this->assertEqual($root->getName(), 'menu1');
 
 		$children = $root->getChildren();
-		$this->assertEqual($children[0]->getID(), 'menu2');
-		$this->assertEqual($children[1]->getID(), 'menu3');
+		$this->assertEqual($children[0]->getName(), 'menu2');
+		$this->assertEqual($children[1]->getName(), 'menu3');
 
 		$children = $children[1]->getChildren();
-		$this->assertEqual($children[0]->getID(), 'menu4');
-		$this->assertEqual($children[1]->getID(), 'menu5');
+		$this->assertEqual($children[0]->getName(), 'menu4');
+		$this->assertEqual($children[1]->getName(), 'menu5');
 	}
 
 }
