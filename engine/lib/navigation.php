@@ -11,11 +11,21 @@
 /**
  * Register an item for an Elgg menu
  *
- * @param string       $menu_name The name of the menu: site, page, userhover,
- *                                userprofile, groupprofile, or any custom menu
- * @param ElggMenuItem $menu_item A menu object
+ * @param string $menu_name The name of the menu: site, page, userhover,
+ *                          userprofile, groupprofile, or any custom menu
+ * @param mixed  $menu_item A ElggMenuItem object or an array of options in format:
+ *                          id        => STR  Menu item identifier (required)
+ *                          title     => STR  Menu item title (required)
+ *                          url       => STR  Menu item URL (required)
+ *                          contexts  => ARR  Page context strings
+ *                          section   => STR  Menu section identifier
+ *                          tooltip   => STR  Menu item tooltip
+ *                          selected  => BOOL Is this menu item currently selected
+ *                          parent_id => STR  Identifier of the parent menu item
  *
- * @return void
+ *                          Custom options can be added as key value pairs.
+ *
+ * @return bool
  * @since 1.8.0
  */
 function elgg_register_menu_item($menu_name, $menu_item) {
@@ -25,7 +35,15 @@ function elgg_register_menu_item($menu_name, $menu_item) {
 		$CONFIG->menus[$menu_name] = array();
 	}
 
+	if (is_array($menu_item)) {
+		$menu_item = ElggMenuItem::factory($menu_item);
+		if (!$menu_item) {
+			return false;
+		}
+	}
+
 	$CONFIG->menus[$menu_name][] = $menu_item;
+	return true;
 }
 
 /**

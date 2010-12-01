@@ -72,6 +72,29 @@ class ElggMenuItem {
 	}
 
 	/**
+	 * ElggMenuItem factory method
+	 *
+	 * This static method creates an ElggMenuItem from an associative array.
+	 * Required keys are id, title, and url.
+	 *
+	 * @param array $options Option array of key value pairs
+	 *
+	 * @return ElggMenuItem or NULL on error
+	 */
+	public static function factory($options) {
+		if (!isset($options['id']) || !isset($options['title']) || !isset($options['url'])) {
+			return NULL;
+		}
+		
+		$item = new ElggMenuItem($options['id'], $options['title'], $options['url']);
+
+		foreach ($options as $key => $value) {
+			$item->$key = $value;
+		}
+		return $item;
+	}
+
+	/**
 	 * Get the identifier of the menu item
 	 *
 	 * @return string
