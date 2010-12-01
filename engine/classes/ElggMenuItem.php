@@ -88,9 +88,21 @@ class ElggMenuItem {
 		
 		$item = new ElggMenuItem($options['id'], $options['title'], $options['url']);
 
+		// special catch in case someone uses context rather than contexts
+		if (isset($options['context'])) {
+			$options['contexts'] = $options['context'];
+			unset($options['context']);
+		}
+
 		foreach ($options as $key => $value) {
 			$item->$key = $value;
 		}
+		
+		// make sure contexts is set correctly
+		if (isset($options['contexts'])) {
+			$item->setContext($options['contexts']);
+		}
+
 		return $item;
 	}
 
