@@ -9,7 +9,9 @@
  */
 class ElggMenuBuilder {
 
-	protected $menu;
+	protected $menu = array();
+
+	protected $selected = null;
 	
 	/**
 	 * ElggMenuBuilder constructor
@@ -32,17 +34,24 @@ class ElggMenuBuilder {
 
 		$this->selectFromContext();
 
-		$this->findSelected();
+		$selected = $this->findSelected();
 
 		$this->setupSections();
 
 		$this->setupTrees();
 
 		$this->sort($sort_by);
-		
-		//$vars['selected_item'] = elgg_menu_find_selected($this->menu);
 
 		return $this->menu;
+	}
+
+	/**
+	 * Get the selected menu item
+	 *
+	 * @return ElggMenuItem
+	 */
+	public function getSelected() {
+		return $this->selected;
 	}
 
 	/**
@@ -132,9 +141,29 @@ class ElggMenuBuilder {
 
 	/**
 	 * Find the menu item that is currently selected
+	 *
+	 * @return ElggMenuItem
 	 */
 	protected function findSelected() {
-		
+
+		// do we have a selected menu item already
+		foreach ($this->menu as $menu_item) {
+			if ($menu_item->getSelected()) {
+				return $menu_item;
+			}
+		}
+
+		// scan looking for a selected item
+		foreach ($this->menu as $menu_item) {
+			if ($menu_item->getURL()) {
+				if (elgg_http_url_is_identical(full_url(), $menu_item->getURL())) {
+					$menu_item->setSelected(true);
+					return $menu_item;
+				}
+			}
+		}
+
+		return null;
 	}
 
 	/**
