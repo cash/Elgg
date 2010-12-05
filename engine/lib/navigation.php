@@ -7,7 +7,6 @@
  * @subpackage Navigation
  */
 
-
 /**
  * Register an item for an Elgg menu
  *
@@ -76,46 +75,31 @@ function elgg_unregister_menu_item($menu_name, $item_name) {
  * Render a menu
  *
  * @param string $menu_name The name of the menu
- * @param array $vars An associative array of display options for the menu. Options include
- *                    sort_by => STR  'name', 'title' (default), 'order' (registration order)
+ * @param array $vars An associative array of display options for the menu.
+ *                    Options include:
+ *                    sort_by => string or php callback
+ *                       string options: 'name', 'title' (default), 'order' (registration order)
+ *                       php callback: a compare function for usort
  *
  * @return string
  * @since 1.8.0
  */
 function elgg_view_menu($menu_name, array $vars = array()) {
-	global $CONFIG;
 	
 	$vars['name'] = $menu_name;
 
-    // give plugins a chance to add menu items just before creation
-	// supports context sensitive menus (ex. user hover)
+	$sort_by = elgg_get_array_value('sort_by', $vars, 'title');
+
+    // Give plugins a chance to add menu items just before creation.
+	// This supports context sensitive menus (ex. user hover).
     elgg_trigger_plugin_hook('register', "menu:$menu_name", $vars, NULL);
 
-    // prepare the menu for display
-	$menu = $CONFIG->menus[$menu_name];
-	$menu = elgg_menu_select_from_context($menu);
-	$vars['selected_item'] = elgg_menu_find_selected($menu);
-	$menu = elgg_menu_setup_sections($menu);
-	$menu = elgg_menu_setup_trees($menu);
+	$builder = new ElggMenuBuilder($menu_name);
+	$vars['menu'] = $builder->getMenu($sort_by);
+	$vars['selected_item'] = $builder->getSelected();
 
-	$sort_by = elgg_get_array_value('sort_by', $vars, 'title');
-	switch ($sort_by) {
-		case 'title':
-			$menu = elgg_menu_sort($menu, 'elgg_menu_item_title_cmp');
-			break;
-		case 'name';
-			$menu = elgg_menu_sort($menu, 'elgg_menu_item_name_cmp');
-			break;
-		case 'order':
-		default:
-			$menu = elgg_menu_sort($menu, '');
-			break;
-	}
-
-	// let plugins modify the menu
-    $menu = elgg_trigger_plugin_hook('prepare', 'menu', $vars, $menu);
-
-	$vars['menu'] = $menu;
+	// Let plugins modify the menu
+    $vars['menu'] = elgg_trigger_plugin_hook('prepare', "menu:$menu_name", $vars, $vars['menu']);
 
     if (elgg_view_exists("navigation/menu/$menu_name")) {
         return elgg_view("navigation/menu/$menu_name", $vars);
@@ -124,217 +108,6 @@ function elgg_view_menu($menu_name, array $vars = array()) {
     }
 }
 
-/**
- * Selects the menu items for the current context
- *
- * Internal Elgg function
- *
- * @param array $menu Flat array of menu items
- *
- * @return array
- * @since 1.8.0
- */
-function elgg_menu_select_from_context($menu) {
-	if (!isset($menu)) {
-		return array();
-	}
-
-	// get menu items for this context
-	$selected_menu = array();
-	foreach ($menu as $menu_item) {
-		if ($menu_item->inContext()) {
-			$selected_menu[] = $menu_item;
-		}
-	}
-
-	return $selected_menu;
-}
-
-/**
- * Find the menu item that is currently selected 
- *
- * Internal Elgg function
- *
- * @param array $menu Flat array of menu items
- *
- * @return ElggMenuItem
- * @since 1.8.0
- */
-function elgg_menu_find_selected($menu) {
-	
-	// do we have a selected menu item already
-	foreach ($menu as $menu_item) {
-		if ($menu_item->getSelected()) {
-			return $menu_item;
-		}
-	}
-
-	// scan looking for a selected item
-	foreach ($menu as $menu_item) {
-		if ($menu_item->getURL()) {
-			if (elgg_http_url_is_identical(full_url(), $menu_item->getURL())) {
-				$menu_item->setSelected(true);
-				return $menu_item;
-			}
-		}
-	}
-
-	return null;
-}
-
-/**
- * Group the menu items into sections
- *
- * Internal Elgg function
- *
- * @param array $menu Flat array of menu items
- *
- * @return array 
- * @since 1.8.0
- */
-function elgg_menu_setup_sections($menu) {
-	$sectioned_menu = array();
-	foreach ($menu as $menu_item) {
-		if (!isset($sectioned_menu[$menu_item->getSection()])) {
-			$sectioned_menu[$menu_item->getSection()] = array();
-		}
-		$sectioned_menu[$menu_item->getSection()][] = $menu_item;
-	}
-
-	return $sectioned_menu;
-}
-
-/**
- * Create trees for each menu section
- *
- * Internal Elgg function
- *
- * @internal The tree is doubly linked (parent and children links)
- *
- * @param array $menu A menu array obtained from elgg_menu_setup_sections()
- *
- * @return array
- * @since 1.8.0
- */
-function elgg_menu_setup_trees($menu) {
-	$menu_tree = array();
-
-	foreach ($menu as $key => $section) {
-		$parents = array();
-		$children = array();
-		// divide base nodes from children
-		foreach ($section as $menu_item) {
-			$parent_name = $menu_item->getParentName();
-			if (!$parent_name) {
-				$parents[$menu_item->getName()] = $menu_item;
-			} else {
-				$children[] = $menu_item;
-			}
-		}
-
-		// attach children to parents
-		$iteration = 0;
-		$current_gen = $parents;
-		while (count($children) && $iteration < 5) {
-			foreach ($children as $index => $menu_item) {
-				$parent_name = $menu_item->getParentName();
-				if (array_key_exists($parent_name, $current_gen)) {
-					$next_gen[$menu_item->getName()] = $menu_item;
-					$current_gen[$parent_name]->addChild($menu_item);
-					$menu_item->setParent($current_gen[$parent_name]);
-					unset($children[$index]);
-				}
-			}
-			$current_gen = $next_gen;
-			$iteration += 1;
-		}
-
-		// convert keys to indexes for first level of tree
-		$parents = array_values($parents);
-		
-		$menu_tree[$key] = $parents;
-	}
-
-
-	return $menu_tree;
-}
-
-/**
- *
- * Elgg Internal function
- * 
- * @param ElggMenuItem $a
- * @param ElggMenuItem $b
- * 
- * @return bool
- * @since 1.8.0
- */
-function elgg_menu_item_name_cmp($a, $b) {
-	$a = $a->getName();
-	$b = $b->getName();
-
-	return strcmp($a, $b);
-}
-
-/**
- *
- * Elgg Internal function
- *
- * @param ElggMenuItem $a
- * @param ElggMenuItem $b
- *
- * @return bool
- * @since 1.8.0
- */
-function elgg_menu_item_title_cmp($a, $b) {
-	$a = $a->getTitle();
-	$b = $b->getTitle();
-
-	return strnatcmp($a, $b);
-}
-
-/**
- * Default sort of the menu
- *
- * Internal Elgg function
- *
- * @param array  $menu          Tree of menu items
- * @param string $sort_function Function name
- *
- * @return array
- * @since 1.8.0
- */
-function elgg_menu_sort($menu_tree, $sort_function = 'elgg_menu_item_title_cmp') {
-
-	ksort($menu_tree);
-
-	foreach ($menu_tree as $index => $section) {
-		usort($section, $sort_function);
-		$menu_tree[$index] = $section;
-
-		if (!$sort_function) {
-			// do not sort menu items but use registration order
-			continue;
-		}
-
-		// depth first traversal of trees
-		foreach ($section as $root) {
-			$stack = array();
-			array_push($stack, $root);
-			while (!empty($stack)) {
-				$node = array_pop($stack);
-				$node->sortChildren($sort_function);
-				$children = $node->getChildren();
-				if ($children) {
-					$stack = array_merge($stack, $children);
-				}
-				$p = count($stack);
-			}
-		}
-	}
-
-	return $menu_tree;
-}
 
 /**
  * Deprecated by elgg_add_submenu_item()
@@ -836,8 +609,7 @@ function elgg_get_breadcrumbs() {
 
 function elgg_navigation_tests($hook, $type, $value, $params) {
 	global $CONFIG;
-	$value = array();
-	$value[] = $CONFIG->path . 'engine/tests/api/navigation.php';
+	$value[] = $CONFIG->path . 'engine/tests/api/menu_builder.php';
 	return $value;
 }
 
