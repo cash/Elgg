@@ -64,6 +64,7 @@ function developers_setup_menu() {
 		elgg_register_admin_menu_item('develop', 'inspect', 'develop_tools');
 		elgg_register_admin_menu_item('develop', 'preview', 'develop_tools');
 		elgg_register_admin_menu_item('develop', 'unit_tests', 'develop_tools');
+		elgg_register_admin_menu_item('develop', 'sniffer', 'develop_tools');
 
 		elgg_register_menu_item('page', array(
 			'name' => 'dev_settings',

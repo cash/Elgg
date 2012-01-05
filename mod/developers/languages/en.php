@@ -9,6 +9,7 @@ $english = array(
 	'admin:develop_tools' => 'Tools',
 	'admin:develop_tools:preview' => 'Theming Sandbox',
 	'admin:develop_tools:inspect' => 'Inspect',
+	'admin:develop_tools:sniffer' => 'Code Sniffer',
 	'admin:develop_tools:unit_tests' => 'Unit Tests',
 	'admin:developers' => 'Developers',
 	'admin:developers:settings' => 'Settings',
