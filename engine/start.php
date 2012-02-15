@@ -70,10 +70,10 @@ if (!include_once(dirname(__FILE__) . "/settings.php")) {
 $lib_files = array(
 	'access.php', 'actions.php', 'admin.php', 'annotations.php', 'cache.php',
 	'configuration.php', 'cron.php', 'database.php',
-	'entities.php', 'export.php', 'extender.php', 'filestore.php', 'group.php',
+	'entities.php', 'extender.php', 'filestore.php', 'group.php',
 	'input.php', 'languages.php', 'location.php', 'mb_wrapper.php',
 	'memcache.php', 'metadata.php', 'metastrings.php', 'navigation.php',
-	'notification.php', 'objects.php', 'opendd.php', 'output.php',
+	'notification.php', 'objects.php', 'output.php',
 	'pagehandler.php', 'pageowner.php', 'pam.php', 'plugins.php',
 	'private_settings.php', 'relationships.php', 'river.php', 'sessions.php',
 	'sites.php', 'statistics.php', 'system_log.php', 'tags.php',
