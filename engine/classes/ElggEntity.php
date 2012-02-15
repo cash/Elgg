@@ -1495,10 +1495,11 @@ abstract class ElggEntity extends ElggData implements
 	 * @param int $duration Duration of event, remainder of the day is assumed.
 	 *
 	 * @return true
-	 * @todo Unimplemented
+	 * @deprecated 1.9
 	 */
 	public function setCalendarTimeAndDuration($hour = NULL, $minute = NULL, $second = NULL,
 	$day = NULL, $month = NULL, $year = NULL, $duration = NULL) {
+		elgg_deprecated_notice(__METHOD__ . ' has been deprecated', 1.9);
 
 		$start = mktime($hour, $minute, $second, $month, $day, $year);
 		$end = $start + abs($duration);
@@ -1516,20 +1517,21 @@ abstract class ElggEntity extends ElggData implements
 	 * Returns the start timestamp.
 	 *
 	 * @return int
-	 * @todo Unimplemented
+	 * @deprecated 1.9
 	 */
 	public function getCalendarStartTime() {
+		elgg_deprecated_notice(__METHOD__ . ' has been deprecated', 1.9);
 		return (int)$this->calendar_start;
 	}
 
 	/**
 	 * Returns the end timestamp.
 	 *
-	 * @todo Unimplemented
-	 *
 	 * @return int
+	 * @deprecated 1.9
 	 */
 	public function getCalendarEndTime() {
+		elgg_deprecated_notice(__METHOD__ . ' has been deprecated', 1.9);
 		return (int)$this->calendar_end;
 	}
 
@@ -1541,8 +1543,10 @@ abstract class ElggEntity extends ElggData implements
 	 * Returns an array of fields which can be exported.
 	 *
 	 * @return array
+	 * @deprecated 1.9
 	 */
 	public function getExportableValues() {
+		elgg_deprecated_notice(__METHOD__ . ' has been deprecated', 1.9);
 		return array(
 			'guid',
 			'type',
@@ -1561,8 +1565,10 @@ abstract class ElggEntity extends ElggData implements
 	 * $this->attributes (shouldn't happen)
 	 *
 	 * @return array
+	 * @deprecated 1.9
 	 */
 	public function export() {
+		elgg_deprecated_notice(__METHOD__ . ' has been deprecated', 1.9);
 		$tmp = array();
 
 		// Generate uuid
@@ -1649,8 +1655,10 @@ abstract class ElggEntity extends ElggData implements
 	 * @param array $data XML data
 	 *
 	 * @return true
+	 * @deprecated 1.9
 	 */
 	public function import(ODD $data) {
+		elgg_deprecated_notice(__METHOD__ . ' has been deprecated', 1.9);
 		if (!($data instanceof ODDEntity)) {
 			throw new InvalidParameterException(elgg_echo('InvalidParameterException:UnexpectedODDClass'));
 		}

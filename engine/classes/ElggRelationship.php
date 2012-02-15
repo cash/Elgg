@@ -109,8 +109,10 @@ class ElggRelationship extends ElggData implements
 	 * Return an array of fields which can be exported.
 	 *
 	 * @return array
+	 * @deprecated 1.9
 	 */
 	public function getExportableValues() {
+		elgg_deprecated_notice(__METHOD__ . ' has been deprecated', 1.9);
 		return array(
 			'id',
 			'guid_one',
@@ -123,8 +125,10 @@ class ElggRelationship extends ElggData implements
 	 * Export this relationship
 	 *
 	 * @return array
+	 * @deprecated 1.9
 	 */
 	public function export() {
+		elgg_deprecated_notice(__METHOD__ . ' has been deprecated', 1.9);
 		$uuid = get_uuid_from_object($this);
 		$relationship = new ODDRelationship(
 			guid_to_uuid($this->guid_one),
@@ -146,8 +150,10 @@ class ElggRelationship extends ElggData implements
 
 	 * @return bool
 	 * @throws ImportException
+	 * @deprecated 1.9
 	 */
 	public function import(ODD $data) {
+		elgg_deprecated_notice(__METHOD__ . ' has been deprecated', 1.9);
 		if (!($data instanceof ODDRelationship)) {
 			throw new InvalidParameterException(elgg_echo('InvalidParameterException:UnexpectedODDClass'));
 		}

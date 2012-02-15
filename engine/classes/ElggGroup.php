@@ -379,6 +379,7 @@ class ElggGroup extends ElggEntity
 	 * Return an array of fields which can be exported.
 	 *
 	 * @return array
+	 * @deprecated 1.9
 	 */
 	public function getExportableValues() {
 		return array_merge(parent::getExportableValues(), array(

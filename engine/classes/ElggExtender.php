@@ -150,8 +150,10 @@ abstract class ElggExtender extends ElggData {
 	 * Return an array of fields which can be exported.
 	 *
 	 * @return array
+	 * @deprecated 1.9
 	 */
 	public function getExportableValues() {
+		elgg_deprecated_notice(__METHOD__ . ' has been deprecated', 1.9);
 		return array(
 			'id',
 			'entity_guid',
@@ -167,8 +169,10 @@ abstract class ElggExtender extends ElggData {
 	 * Export this object
 	 *
 	 * @return array
+	 * @deprecated 1.9
 	 */
 	public function export() {
+		elgg_deprecated_notice(__METHOD__ . ' has been deprecated', 1.9);
 		$uuid = get_uuid_from_object($this);
 
 		$meta = new ODDMetadata($uuid, guid_to_uuid($this->entity_guid), $this->attributes['name'],
@@ -202,8 +206,7 @@ abstract class ElggExtender extends ElggData {
 	}
 
 	/**
-	 * Return a subtype. For metadata & annotations this is the 'name' and
-	 * for relationship this is the relationship type.
+	 * Return a subtype. This is the 'name'.
 	 *
 	 * @return string
 	 */
