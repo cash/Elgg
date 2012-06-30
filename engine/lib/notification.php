@@ -18,6 +18,161 @@
  * @subpackage Notifications
  */
 
+/**
+ * Register a notification event
+ *
+ * Elgg sends notifications for the items that have been registered with this function. For example, if you want
+ * notifications to be sent when a bookmark has been created, call the function like this:
+ *
+ * 	   elgg_register_notify_event('entity', 'object', 'bookmarks', array('create'));
+ *
+ * If you want notifications sent when a friend relationship is created:
+ *
+ * 	   elgg_register_notify_event('relationship', 'friend');
+ *
+ * @param  string $data_class   'entity', 'annotation', 'relationship'
+ * @param  string $data_type    The type of the entity or the subtype of the annotation or relationship
+ * @param  string $data_subtype The subtype of the entity or null for all subtypes. Null for non-entity data classes.
+ * @param  array  $events       Array of events or empty array for the create event. An event is described
+ *                              by the first string passed to elgg_trigger_event(). Examples include
+ *                              'create', 'update', and 'publish'.
+ * @return bool
+ * @since 1.9
+ */
+function elgg_register_notify_event($data_class, $data_type, $data_subtype = null, array $events = array()) {
+	global $CONFIG;
+
+	if (!isset($CONFIG->notification_events)) {
+		$CONFIG->notification_events = array();
+	}
+	if (!isset($CONFIG->notification_events[$data_class])) {
+		$CONFIG->notification_events[$data_class] = array();
+	}
+	if (!isset($CONFIG->notification_events[$data_class][$data_type])) {
+		$CONFIG->notification_events[$data_class][$data_type] = array();
+	}
+	$event_list =& $CONFIG->notification_events[$data_class][$data_type];
+	if ($data_subtype) {
+		if (!isset($CONFIG->notification_events[$data_class][$data_type][$data_subtype])) {
+			$CONFIG->notification_events[$data_class][$data_type][$data_subtype] = array();
+		}
+		$event_list =& $CONFIG->notification_events[$data_class][$data_type][$data_subtype];
+	}
+
+	if ($events) {
+		$event_list += $events;
+	} elseif (!in_array('create', $event_list)) {
+		$event_list[] = 'create';
+	}
+	return true;
+}
+
+/**
+ * Unregister a notification event
+ *
+ * @param  string $data_class   'entity', 'annotation', 'relationship'
+ * @param  string $data_type    The type of the entity or the subtype of the annotation or relationship
+ * @param  string $data_subtype The subtype of the entity or null for all subtypes. Null for non-entity data classes.
+ * @return bool
+ * @since 1.9
+ */
+function elgg_unregister_notify_event($data_class, $data_type, $data_subtype = null) {
+	if (!isset($CONFIG->notification_events) ||
+		!isset($CONFIG->notification_events[$data_class]) ||
+		!isset($CONFIG->notification_events[$data_class][$data_type])) {
+		return false;
+	}
+
+	if ($data_subtype) {
+		if (!isset($CONFIG->notification_events[$data_class][$data_type][$data_subtype])) {
+			return false;
+		}
+		unset($CONFIG->notification_events[$data_class][$data_type][$data_subtype]);
+	} else {
+		unset($CONFIG->notification_events[$data_class][$data_type]);
+	}
+	return true;
+}
+
+/**
+ * Queue a notification event for later handling
+ *
+ * This function checks to see if this event has been registered for notifications.
+ * If so, it adds the event to a notification queue.
+ *
+ * This function triggers the 'enqueue', 'notification' hook.
+ *
+ * @param string $event  The name of the event
+ * @param string $type   The type of event/object
+ * @param object $object The object of the event
+ * @return void
+ * @access private
+ * @since 1.9
+ */
+function _elgg_enqueue_notification_event($event, $type, $object) {
+	if ($object instanceof ElggData) {
+		if (elgg_instanceof($object)) {
+			$data_class = 'entity';
+			$data_type = $object->getType();
+			$data_subtype = $object->getSubtype();
+		} else {
+			$data_class = $object->getType();
+			$data_type = $object->getSubtype();
+			$data_subtype = null;
+		}
+
+		$registered = false;
+		global $CONFIG;
+		// @todo need to clean this up as it throws notices when the array is not defined - a class would work
+		if (in_array($event, $CONFIG->notification_events[$data_class][$data_type])) {
+			$registered = true;
+		} elseif ($data_subtype && 
+				in_array($event, $CONFIG->notification_events[$data_class][$data_type][$data_subtype])) {
+			$registered = true;
+		}
+
+		if ($registered) {
+			$params = array(
+				'event' => $event,
+				'type' => $type,
+				'object' => $object,
+			);
+			$registered = elgg_trigger_plugin_hook('enqueue', 'notification', $params, $registered);
+		}
+
+		if ($registered) {
+			$manager = new ElggNotificationManager();
+			$manager->enqueueNotificationEvent(new ElggNotificationEvent($object, $event));
+		}
+	}
+}
+
+/**
+ * @access private
+ */
+function _elgg_notifications_cron() {
+	// calculate when we should stop
+	$stop_time = time() + 45;
+
+	$manager = new ElggNotificationManager();
+	$manager->run($stop_time);
+}
+
+/**
+ * @access private
+ */
+function _elgg_notifications_init() {
+	elgg_register_plugin_hook_handler('cron', 'minute', '_elgg_notifications_cron', 100);
+	elgg_register_event_handler('all', 'all', '_elgg_enqueue_notification_event');
+}
+
+elgg_register_event_handler('init', 'system', '_elgg_notifications_init');
+
+
+
+
+
+
 /** Notification handlers */
 global $NOTIFICATION_HANDLERS;
 $NOTIFICATION_HANDLERS = array();

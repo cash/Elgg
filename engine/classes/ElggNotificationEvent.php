@@ -21,37 +21,30 @@ class ElggNotificationEvent {
 	 * Create a notification event
 	 *
 	 * @param ElggData $object The object of the event (ElggEntity, ElggAnnotation, ElggRelationship)
-	 * @param ElggUser $actor  The user that caused the event (default: logged in user)
 	 * @param string   $event  The name of the event (default: create)
+	 * @param ElggUser $actor  The user that caused the event (default: logged in user)
 	 */
-	public function __construct($object, $actor = null, $event = 'create') {
-		if ($object instanceof stdClass) {
-			// creating from stdClass object - useful if serializing to external storage
-			foreach ($object as $key => $value) {
-				$this->$key = $value;
-			}
-		} else {
-			if (!($object instanceof ElggData)) {
-				// @todo find the best message - probably create generic message
-				throw new InvalidParameterException();
-			}
-
-			if (elgg_instanceof($object)) {
-				$this->object_type = 'entity';
-				$this->object_id = $object->getGUID();
-			} else {
-				$this->object_type = $object->getType();
-				$this->object_id = $object->id;
-			}
-
-			if ($actor == null) {
-				$this->actor_guid = elgg_get_logged_in_user_guid();
-			} else {
-				$this->actor_guid = $actor->getGUID();
-			}
-
-			$this->event = $event;
+	public function __construct($object, $event = 'create', $actor = null) {
+		if (!($object instanceof ElggData)) {
+			// @todo find the best message - probably create generic message
+			throw new InvalidParameterException();
 		}
+
+		if (elgg_instanceof($object)) {
+			$this->object_type = 'entity';
+			$this->object_id = $object->getGUID();
+		} else {
+			$this->object_type = $object->getType();
+			$this->object_id = $object->id;
+		}
+
+		if ($actor == null) {
+			$this->actor_guid = elgg_get_logged_in_user_guid();
+		} else {
+			$this->actor_guid = $actor->getGUID();
+		}
+
+		$this->event = $event;
 	}
 
 	/**
@@ -76,7 +69,7 @@ class ElggNotificationEvent {
 			case 'relationship':
 				return get_relationship($this->object_id);
 				break;
-			case 'extender':
+			case 'annotation':
 				return elgg_get_annotation_from_id($this->object_id);
 				break;
 		}
