@@ -68,15 +68,9 @@ class ElggNotificationManager {
 	 * @return array
 	 */
 	protected function getSubscriptions($event) {
-		// @todo this is a mock implementation
-		$users = elgg_get_entities(array(
-			'type' => 'user',
-		));
-		$result = array();
-		foreach ($users as $user) {
-			$result[$user->guid] = array('site');
-		}
-		return $result;
+		// @todo should we inject the subscription manager in constructor to support different managers?
+		$manager = new ElggSubscriptionManager();
+		return $manager->getSubscriptions($event);
 	}
 
 	/**
