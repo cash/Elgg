@@ -6,7 +6,7 @@
  * result in a notification being sent to a user. The schema is based on Activity
  * Streams (http://activitystrea.ms/). When an event that leads to notifications
  * occurs, the parameters of that event are compared with the subscriptions to
- * identify what users are notified.
+ * identify which users are notified.
  *
  * Definitions:
  * Actor:  the user causing the event.
@@ -28,7 +28,7 @@
  *    object: null
  *    target: null
  *
- * 3. I want to be notified when something happens with the Cycling group
+ * 3. I want to be notified when something happens in the Cycling group
  *    actor: null
  *    event: null
  *    object: null
@@ -49,7 +49,7 @@
 class ElggSubscription {
 
 	/* @var ElggUser The user doing the subscribing */
-	protected $subscriber;
+	protected $subscriber_guid;
 
 	/* @var string The method for sending the notification */
 	protected $method;
@@ -71,13 +71,37 @@ class ElggSubscription {
 	 * Create a subscription object
 	 * 
 	 * @param ElggUser   $subscriber The user to be notified
-	 * @param string     $method     How the user should be notified
-	 * @param ElggUser   $actor      The user of the subscription
+	 * @param string     $method     How the user should be notified: email, site, sms, etc.
 	 * @param string     $event      Description of the event
+	 * @param ElggUser   $actor      The user of the subscription
 	 * @param ElggEntity $object     The entity acted on
 	 * @param ElggEntity $target     Usually the container
 	 */
-	public function __construct($subscriber, $method, $actor, $event, $object = null, $target = null) {
-		;
+	public function __construct(ElggUser $subscriber, $method, $event, ElggUser $actor = null, ElggEntity $object = null, ElggEntity $target = null) {
+		if (!elgg_instanceof($subscriber, 'user')) {
+			// throw exception
+		}
+
+		$this->subscriber_guid = $subscriber->getGUID();
+		$this->method = $method;
+		$this->event = $event;
+		$this->actor_guid = $actor ? $actor->getGUID() : null;
+		$this->object_guid = $object ? $object->getGUID() : null;
+		$this->target_guid = $target ? $target->getGUID() : null;
+	}
+
+	/**
+	 * Get the subscription as a set of key value pairs for non-null values
+	 *
+	 * @return array
+	 */
+	public function getData() {
+		$data = array();
+		foreach ($this as $key => $value) {
+			if (!is_null($value)) {
+				$data[$key] = $value;
+			}
+		}
+		return $data;
 	}
 }

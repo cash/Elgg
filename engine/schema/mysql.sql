@@ -350,18 +350,16 @@ CREATE TABLE `prefix_sites_entity` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `prefix_subscriptions` (
-  `guid` bigint(20) unsigned NOT NULL,
-  `data_class` varchar(8) NOT NULL,
-  `actor` bigint(20) unsigned DEFAULT NULL,
-  `owner` bigint(20) unsigned DEFAULT NULL,
-  `container` bigint(20) unsigned DEFAULT NULL,
-  `type` enum('object','user','group','site') DEFAULT NULL,
-  `subtype` int(11) DEFAULT NULL,
-  `subject` bigint(20) unsigned DEFAULT NULL,
-  `object` bigint(20) unsigned DEFAULT NULL,
+  `subscriber_guid` bigint(20) unsigned NOT NULL,
   `method` varchar(255) NOT NULL,
-  KEY `actor_key` (`data_type`,`actor`),
-  KEY `container_key` (`data_type`,`container`)
+  `event` varchar(255) DEFAULT NULL,
+  `actor_guid` bigint(20) unsigned DEFAULT NULL,
+  `object_guid` bigint(20) unsigned DEFAULT NULL,
+  `target_guid` bigint(20) unsigned DEFAULT NULL,
+  KEY `event_key` (`event`),
+  KEY `actor_key` (`actor_guid`),
+  KEY `object_key` (`object_guid`),
+  KEY `target_key` (`target_guid`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
