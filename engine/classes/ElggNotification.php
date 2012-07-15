@@ -18,21 +18,26 @@ class ElggNotification {
 	/** @var string The body string */
 	public $body;
 
+	/** @var string The language of the notification */
+	public $language;
+
 	/** @var array Additional parameters */
 	public $params;
 
 	/**
 	 * Create a notification
 	 *
-	 * @param ElggEntity $from
-	 * @param ElggEntity $to
-	 * @param string     $subject
-	 * @param string     $body
-	 * @param array      $params
+	 * @param ElggEntity $from     The entity sending the notification (usually the site)
+	 * @param ElggEntity $to       The entity receiving the notification
+	 * @param string     $language The language code for the notification
+	 * @param string     $subject  The subject of the notification
+	 * @param string     $body     The body of the notification
+	 * @param array      $params   Optional array of parameters
 	 */
-	public function __construct($from, $to, $subject, $body, array $params = array()) {
+	public function __construct($from, $to, $language, $subject, $body, array $params = array()) {
 		$this->from = $from;
 		$this->to = $to;
+		$this->language = $language;
 		$this->subject = $subject;
 		$this->body = $body;
 		$this->params = $params;

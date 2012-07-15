@@ -1,7 +1,7 @@
 <?php
 /**
- * This class has to figure out who receives notifications based on subscriptions,
- * creates the notification messages, and then sends them out.
+ * Manage the notification queue, retrieves subscriptions,
+ * creates the notification messages, and sends them out.
  *
  * @since 1.9
  */
@@ -33,9 +33,10 @@ class ElggNotificationManager {
 
 			// return false to stop the default notification sender
 			$params = array('event' => $event, 'subscriptions' => $subscriptions);
-			if (elgg_trigger_plugin_hook('sending', 'notifications', $params, true)) {
+			if (elgg_trigger_plugin_hook('send:before', 'notifications', $params, true)) {
 				$this->sendNotifications($event, $subscriptions);
 			}
+			elgg_trigger_plugin_hook('send:after', 'notifications', $params);
 			$count++;
 		}
 
@@ -83,13 +84,15 @@ class ElggNotificationManager {
 	protected function sendNotifications($event, $subscriptions) {
 
 		$registeredMethods = elgg_get_config('notification_methods');
+		$registeredMethods = $registeredMethods ? $registeredMethods : array();
 
 		$count = 0;
 		foreach ($subscriptions as $guid => $methods) {
 			foreach ($methods as $method) {
 				if (in_array($method, $registeredMethods)) {
-					$this->sendNotification($event, $guid, $method);
-					$count++;
+					if ($this->sendNotification($event, $guid, $method)) {
+						$count++;
+					}
 				}
 			}
 		}
@@ -120,13 +123,13 @@ class ElggNotificationManager {
 
 		$subject = elgg_echo('notification:subject', array(), $language);
 		$body = elgg_echo('notification:body', array(), $language);
-		$notification = new ElggNotification($event->getActor(), $recipient, $subject, $body);
+		$notification = new ElggNotification($event->getActor(), $recipient, $language, $subject, $body);
 
-		$type = $event->getDescription();
-		$notification = elgg_trigger_plugin_hook('notification:prepare', $type, $params, $notification);
+		$type = 'notification:' . $event->getDescription();
+		$notification = elgg_trigger_plugin_hook('prepare', $type, $params, $notification);
 
 		// return true to indicate the notification has been sent
 		$params = array('notification' => $notification);
-		return elgg_trigger_plugin_hook('notification:send', $method, $params, false);
+		return elgg_trigger_plugin_hook('send', "notification:$method", $params, false);
 	}
 }

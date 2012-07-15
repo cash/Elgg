@@ -9,20 +9,22 @@
 /**
  * Register a notification event
  *
- * Elgg sends notifications for the items that have been registered with this function. For example, if you want
- * notifications to be sent when a bookmark has been created, call the function like this:
+ * Elgg sends notifications for the items that have been registered with this
+ * function. For example, if you want notifications to be sent when a bookmark
+ * has been created or updated, call the function like this:
  *
- * 	   elgg_register_notify_event('object', 'bookmarks', array('create'));
+ * 	   elgg_register_notify_event('object', 'bookmarks', array('create', 'update'));
  *
- * If you want notifications sent when a friend relationship is created:
+ * If you want notifications sent when a user friends another user:
  *
  * 	   elgg_register_notify_event('relationship', 'friend');
  *
  * @param  string $object_type    'object', 'user', 'group', 'site', 'annotation', 'relationship'
- * @param  string $object_subtype The type of the entity or the subtype of the annotation or relationship
- * @param  array  $actions        Array of actions or empty array for the action event. An event is described
- *                                by the first string passed to elgg_trigger_event(). Examples include
- *                                'create', 'update', and 'publish'.
+ * @param  string $object_subtype The subtype or name of the entity, annotation or relationship
+ * @param  array  $actions        Array of actions or empty array for the action event.
+ *                                An event is usually described by the first string passed
+ *                                to elgg_trigger_event(). Examples include
+ *                                'create', 'update', and 'publish'. The default is 'create'.
  * @return bool
  * @since 1.9
  */
@@ -132,8 +134,10 @@ function _elgg_enqueue_notification_event($action, $type, $object) {
 
 		$registered = false;
 		global $CONFIG;
-		// @todo need to add isset to avoid notices
-		if (in_array($action, $CONFIG->notification_events[$object_type][$object_subtype])) {
+		// @todo we need to wrap this kind of logic in a helper class
+		if (isset($CONFIG->notification_events[$object_type])
+			&& isset($CONFIG->notification_events[$object_type][$object_subtype])
+			&& in_array($action, $CONFIG->notification_events[$object_type][$object_subtype])) {
 			$registered = true;
 		}
 
@@ -157,6 +161,7 @@ function _elgg_enqueue_notification_event($action, $type, $object) {
  */
 function _elgg_notifications_cron() {
 	// calculate when we should stop
+	// @todo make configurable?
 	$stop_time = time() + 45;
 
 	$manager = new ElggNotificationManager();
