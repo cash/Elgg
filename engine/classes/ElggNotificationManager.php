@@ -33,7 +33,7 @@ class ElggNotificationManager {
 
 			// return false to stop the default notification sender
 			$params = array('event' => $event, 'subscriptions' => $subscriptions);
-			if (elgg_trigger_plugin_hook('send', 'notifications', $params, true)) {
+			if (elgg_trigger_plugin_hook('sending', 'notifications', $params, true)) {
 				$this->sendNotifications($event, $subscriptions);
 			}
 			$count++;
@@ -81,11 +81,16 @@ class ElggNotificationManager {
 	 * @return int The number of notifications handled
 	 */
 	protected function sendNotifications($event, $subscriptions) {
+
+		$registeredMethods = elgg_get_config('notification_methods');
+
 		$count = 0;
 		foreach ($subscriptions as $guid => $methods) {
 			foreach ($methods as $method) {
-				$this->sendNotification($event, $guid, $method);
-				$count++;
+				if (in_array($method, $registeredMethods)) {
+					$this->sendNotification($event, $guid, $method);
+					$count++;
+				}
 			}
 		}
 		return $count;
@@ -97,20 +102,31 @@ class ElggNotificationManager {
 	 * @param ElggNotificationEvent $event  The notification event
 	 * @param int                   $guid   The guid of the subscriber
 	 * @param string                $method The notification method
+	 * @return bool
 	 */
 	protected function sendNotification($event, $guid, $method) {
-		$params = array('method' => $method, 'guid' => $guid, 'event' => $event);
-		$result = array(
-			'from' => $event->getActor(),
-			'to' => get_entity($guid),
-			'subject' => 'test message',
-			'body' => 'test',
-			'params' => array(),
+
+		$recipient = get_entity($guid);
+		if (!$recipient) {
+			return false;
+		}
+		$language = $recipient->language;
+		$params = array(
+			'event' => $event,
+			'method' => $method,
+			'recipient' => $recipient,
+			'language' => $language,
 		);
-		// @todo - need to create this string from event
-		$type = "message:entity:object:bookmarks";
-		$result = elgg_trigger_plugin_hook($type, 'notifications', $params, $result);
-		// @todo notify_user() should probably take an ElggMail object or something like that
-		notify_user($result['to']->guid, $result['from']->guid, $result['subject'], $result['body'], $result['params'], $method);
+
+		$subject = elgg_echo('notification:subject', array(), $language);
+		$body = elgg_echo('notification:body', array(), $language);
+		$notification = new ElggNotification($event->getActor(), $recipient, $subject, $body);
+
+		$type = $event->getDescription();
+		$notification = elgg_trigger_plugin_hook('notification:prepare', $type, $params, $notification);
+
+		// return true to indicate the notification has been sent
+		$params = array('notification' => $notification);
+		return elgg_trigger_plugin_hook('notification:send', $method, $params, false);
 	}
 }

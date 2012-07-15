@@ -92,4 +92,13 @@ class ElggNotificationEvent {
 	public function getAction() {
 		return $this->action;
 	}
+
+	/**
+	 * Get a description of the event
+	 *
+	 * @return string
+	 */
+	public function getDescription() {
+		return "{$this->action}:{$this->object_type}:{$this->object_subtype}";
+	}
 }

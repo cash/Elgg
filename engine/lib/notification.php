@@ -72,25 +72,43 @@ function elgg_unregister_notify_event($object_type, $object_subtype) {
 /**
  * Register a delivery method for notifications
  *
- * @param string   $name
- * @param function $callback
+ * @param string $name The notification method name
  * @return bool
- *
  * @see elgg_unregister_notification_method()
+ * @since 1.9
  */
-function elgg_register_notification_method($name, $callback) {
+function elgg_register_notification_method($name) {
+	global $CONFIG;
+
+	if (!isset($CONFIG->notification_methods)) {
+		$CONFIG->notification_methods = array();
+	}
+
+	$CONFIG->notification_methods[] = $name;
+	$CONFIG->notification_methods = array_unique($CONFIG->notification_methods);
+	return true;
 }
 
 /**
  * Unregister a delivery method for notifications
  *
- * @param string   $name
- * @param function $callback
+ * @param string $name The notification method name
  * @return bool
- *
  * @see elgg_register_notification_method()
+ * @since 1.9
  */
-function elgg_unregister_notification_method($name, $callback) {
+function elgg_unregister_notification_method($name) {
+	global $CONFIG;
+
+	if (!isset($CONFIG->notification_methods)) {
+		return false;
+	}
+
+	if (isset($CONFIG->notification_methods[$name])) {
+		unset($CONFIG->notification_methods[$name]);
+		return true;
+	}
+	return false;
 }
 
 /**
