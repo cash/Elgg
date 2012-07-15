@@ -5,10 +5,13 @@
 class ElggNotificationEvent {
 
 	/* @var string The name of the action/event */
-	protected $event;
+	protected $action;
 
-	/* @var string The type of the object (entity, relationship, annotation) */
+	/* @var string The type of the action's object */
 	protected $object_type;
+
+	/* @var string the subtype of the action's object */
+	protected $object_subtype;
 
 	/* @var int The identifier of the object (GUID for entity, id for relationship or annotation) */
 	protected $object_id;
@@ -21,20 +24,22 @@ class ElggNotificationEvent {
 	 * Create a notification event
 	 *
 	 * @param ElggData $object The object of the event (ElggEntity, ElggAnnotation, ElggRelationship)
-	 * @param string   $event  The name of the event (default: create)
+	 * @param string   $action  The name of the action (default: create)
 	 * @param ElggUser $actor  The user that caused the event (default: logged in user)
 	 */
-	public function __construct($object, $event = 'create', $actor = null) {
+	public function __construct($object, $action, $actor = null) {
 		if (!($object instanceof ElggData)) {
 			// @todo find the best message - probably create generic message
 			throw new InvalidParameterException();
 		}
 
 		if (elgg_instanceof($object)) {
-			$this->object_type = 'entity';
+			$this->object_type = $object->getType();
+			$this->object_subtype = $object->getSubtype();
 			$this->object_id = $object->getGUID();
 		} else {
 			$this->object_type = $object->getType();
+			$this->object_subtype = $object->getSubtype();
 			$this->object_id = $object->id;
 		}
 
@@ -44,7 +49,7 @@ class ElggNotificationEvent {
 			$this->actor_guid = $actor->getGUID();
 		}
 
-		$this->event = $event;
+		$this->action = $action;
 	}
 
 	/**
@@ -63,7 +68,10 @@ class ElggNotificationEvent {
 	 */
 	public function getObject() {
 		switch ($this->object_type) {
-			case 'entity':
+			case 'object':
+			case 'user':
+			case 'site':
+			case 'group':
 				return get_entity($this->object_id);
 				break;
 			case 'relationship':
@@ -77,11 +85,11 @@ class ElggNotificationEvent {
 	}
 
 	/**
-	 * Get the name of the event
+	 * Get the name of the action
 	 *
 	 * @return string
 	 */
-	public function getName() {
-		return $this->event;
+	public function getAction() {
+		return $this->action;
 	}
 }
