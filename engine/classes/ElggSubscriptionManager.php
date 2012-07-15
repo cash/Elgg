@@ -21,7 +21,7 @@ class ElggSubscriptionManager {
 		$params = $subscription->getData();
 		foreach ($params as $key => $value) {
 			if (!is_int($value)) {
-				$params[$key] = "'$value'";
+				$params[$key] = "'". sanitize_string($value) . "'";
 			}
 		}
 
@@ -35,15 +35,12 @@ class ElggSubscriptionManager {
 	}
 
 	/**
-	 * Unsubscribe a user for a set of notification events
+	 * Unsubscribe a user for a notification event
 	 *
 	 * @param ElggSubscription $subscription The subscription to remove
 	 * @return bool
 	 */
 	public function removeSubscription(ElggSubscription $subscription) {
-		if (!$this->validateSubscription($subscription)) {
-			return false;
-		}
 
 		// @todo implement
 		return false;
@@ -62,15 +59,49 @@ class ElggSubscriptionManager {
 	 * @return array
 	 */
 	public function getSubscriptions(ElggNotificationEvent $event) {
-		// @todo this is a mock implementation
-		$users = elgg_get_entities(array(
-			'type' => 'user',
-		));
-		$result = array();
-		foreach ($users as $user) {
-			$result[$user->guid] = array('site');
+
+		$actor = $event->getActor();
+		$action = $event->getAction();
+		$object = null;
+		$target = null;
+
+		$eventObject = $event->getObject();
+		if (!$eventObject) {
+			// object was deleted before notifications sent
+			// @todo need to think about sending notifications on non-public stuff
+			return array();
 		}
-		return $result;
+		$type = $eventObject->getType();
+		$subtype = $eventObject->getSubtype();
+		switch ($type) {
+			case 'relationship':
+				$object = get_entity($eventObject->guid_two);
+				break;
+			case 'annotation':
+				$object = $eventObject->getEntity();
+				$target = $object->getContainerEntity();
+				break;
+			default:
+				$object = $eventObject;
+				$target = $object->getContainerEntity();
+				break;
+		}
+
+		$subscriptions = array();
+		$db_prefix = elgg_get_config('dbprefix');
+		$query = "SELECT * from {$db_prefix}subscriptions";
+
+		$wheres = array();
+		//$wheres[] = "actor_guid = $actor->guid AND target_guid = NULL AND object_guid = NULL AND action = NULL";
+		//$wheres[] = "actor_guid = $actor->guid AND target_guid = NULL AND object_guid = NULL AND action = 'create'";
+
+		$results = get_data($query);
+		if ($results) {
+			foreach ($results as $result) {
+				$subscriptions[$result->subscriber_guid] = array('site');
+			}
+		}
+		return $subscriptions;
 	}
 
 	/**
@@ -81,8 +112,12 @@ class ElggSubscriptionManager {
 	 */
 	protected function validateSubscription(ElggSubscription $subscription) {
 		// method must be registered
+		$methods = elgg_get_config('notification_methods');
+		if (!$methods || !in_array($subscription->getMethod(), $methods)) {
+			return false;
+		}
 
-		// event must be registered
+		// @todo event must be registered
 
 		return true;
 	}

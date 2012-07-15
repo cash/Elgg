@@ -352,11 +352,14 @@ CREATE TABLE `prefix_sites_entity` (
 CREATE TABLE `prefix_subscriptions` (
   `subscriber_guid` bigint(20) unsigned NOT NULL,
   `method` varchar(255) NOT NULL,
-  `event` varchar(255) DEFAULT NULL,
+  `action` varchar(255) DEFAULT NULL,
+  `action_type` varchar(255) DEFAULT NULL,
+  `action_subtype` varchar(255) DEFAULT NULL,
   `actor_guid` bigint(20) unsigned DEFAULT NULL,
   `object_guid` bigint(20) unsigned DEFAULT NULL,
   `target_guid` bigint(20) unsigned DEFAULT NULL,
-  KEY `event_key` (`event`),
+  KEY `action_key` (`action`(10)),
+  KEY `action_class_key` (`action`(10),`action_type`(10),`action_subtype`(10)),
   KEY `actor_key` (`actor_guid`),
   KEY `object_key` (`object_guid`),
   KEY `target_key` (`target_guid`)
